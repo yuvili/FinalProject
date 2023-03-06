@@ -41,7 +41,7 @@ def generate_ip_addresses():
 
 def offer(packet):
     print("start offer")
-    if packet[IP].src is not "0.0.0.0":
+    if packet[IP].src != "0.0.0.0":
         return
     client_mac_add = packet[Ether].src
     offered_ip = random.choice(available_addresses)
@@ -141,7 +141,7 @@ def nak(request_packet):
 
 def release(release_packet):
     client_ip = release_packet[IP].src
-    if client_ip is not "0.0.0.0":
+    if client_ip != "0.0.0.0":
         log_file.pop(client_ip)
         available_addresses.append(client_ip)
 
