@@ -24,11 +24,18 @@ class MainGui:
 
         Label(dhcp_screen, text="").pack()
         Button(dhcp_screen, text="Generate IP", width=10, height=1,
-               command=lambda: self.operator.dhcp_generate_ip(dhcp_screen)).place(relx=0.5, rely=0.2,
+               command=lambda: self.dhcp_generateIP_frame(dhcp_screen)).place(relx=0.5, rely=0.2,
                                                                                             anchor=CENTER)
         Button(dhcp_screen, text="Release IP", width=10, height=1,
                command=lambda: self.operator.dhcp_generate_ip(dhcp_screen)).place(relx=0.5, rely=0.3,
                                                                                   anchor=CENTER)
+    def dhcp_generateIP_frame(self, dhcp_screen):
+        gen_ip_screen = Toplevel(dhcp_screen)
+        gen_ip_screen.title("Generate IP address")
+        gen_ip_screen.geometry("300x250")
+
+        self.operator.dhcp_generate_ip(gen_ip_screen)
+
 
     def build_main_frame(self):
         top_frame = Labelframe(self.window, text='Main Menu', width=300)

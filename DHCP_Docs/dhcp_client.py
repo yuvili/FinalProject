@@ -21,7 +21,7 @@ OP_REQUEST = 1
 OP_REPLY = 2
 
 
-class ClientDHCP():
+class ClientDHCP:
 
     def __init__(self):
         self.mac_address = gma()  # Extracting the mac address of this computer
@@ -38,6 +38,7 @@ class ClientDHCP():
         connect to a network for the first time.
         """
         # Build DHCP discover packet
+        print("in discover")
         packet = (
                 Ether(dst="ff:ff:ff:ff:ff:ff", type=0x0800) /
                 IP(src="0.0.0.0", dst="255.255.255.255") /
@@ -50,6 +51,17 @@ class ClientDHCP():
                 DHCP(options=[("message-type", MSG_TYPE_DISCOVER), "end"])
         )
         sendp(packet, verbose=False)
+        print("send packet")
+        while True:
+            pack = sniff(filter='udp and port 67', count=1)
+            if DHCP in pack:
+                pack.show()
+                # Match DHCP offer
+                if pack[DHCP].options[0][1] == MSG_TYPE_OFFER:
+                    print('---')
+                    print('New DHCP Offer')
+                    # TODO-2: get results form offer func and make this function a return to return the ip address
+                    self.offer(pack)
 
     def request(self, server_ip, offered_addr, transaction_id):
         """
@@ -180,7 +192,6 @@ class ClientDHCP():
         while True:
             try:
                 sniff(filter='udp and port 67', prn=self.handle_offer, count=1)
-                break
 
             except Exception as e:
                 print(f"Unexpected error: {str(e)}")
