@@ -1,4 +1,6 @@
 import random
+import threading
+
 from getmac import get_mac_address as gma
 from scapy.layers.l2 import Ether
 from scapy.layers.inet import IP, UDP
@@ -32,6 +34,13 @@ class ClientDHCP:
         self.client_port = 68
         self.server_port = 67
 
+        self.server_ip= ""
+        self.offered_addr= ""
+        self.transaction_id = None
+        self.got_offer = False
+        self.got_nak = False
+
+
     def discover(self):
         """
         Broadcast by a DHCP client to locate a DHCP server when the client attempts to
@@ -39,6 +48,7 @@ class ClientDHCP:
         """
         # Build DHCP discover packet
         print("in discover")
+        self.transaction_id = random.randint(1, 2 ** 32 - 1)
         packet = (
                 Ether(dst="ff:ff:ff:ff:ff:ff", type=0x0800) /
                 IP(src="0.0.0.0", dst="255.255.255.255") /
@@ -46,24 +56,14 @@ class ClientDHCP:
                 BOOTP(
                     op=OP_REQUEST,
                     chaddr=mac2str(self.mac_address),
-                    xid=random.randint(1, 2 ** 32 - 1),
+                    xid=self.transaction_id,
                 ) /
                 DHCP(options=[("message-type", MSG_TYPE_DISCOVER), "end"])
         )
         sendp(packet, verbose=False)
         print("send packet")
-        while True:
-            pack = sniff(filter='udp and port 67', count=1)
-            if DHCP in pack:
-                pack.show()
-                # Match DHCP offer
-                if pack[DHCP].options[0][1] == MSG_TYPE_OFFER:
-                    print('---')
-                    print('New DHCP Offer')
-                    # TODO-2: get results form offer func and make this function a return to return the ip address
-                    self.offer(pack)
 
-    def request(self, server_ip, offered_addr, transaction_id):
+    def request(self):
         """
         A DHCP Request message is sent in the following scenarios:
         1. After a DHCP client starts, it broadcasts a DHCP Request message to respond to the DHCP Offer message sent by a DHCP server.
@@ -80,12 +80,12 @@ class ClientDHCP:
                     op=OP_REQUEST,
                     siaddr=self.ip_add,
                     chaddr=mac2str(self.mac_address),
-                    xid=transaction_id
+                    xid=self.transaction_id
                 ) /
                 DHCP(options=[
                     ("message-type", MSG_TYPE_REQUEST),
-                    ("server_id", server_ip),
-                    ("requested_addr", offered_addr), "end"]
+                    ("server_id", self.server_ip),
+                    ("requested_addr", self.offered_addr), "end"]
                 )
         )
         sendp(request_packet, verbose=False)
@@ -118,10 +118,7 @@ class ClientDHCP:
         self.subnet_mask = dhcp_ack[DHCP].options[3][1]
         self.router = dhcp_ack[DHCP].options[4][1]
 
-    def decline(self, dhcp_offer):
-        server_ip = dhcp_offer[IP].src
-        transaction_id = dhcp_offer[BOOTP].xid
-
+    def decline(self):
         decline_packet = (
                 Ether(dst="ff:ff:ff:ff:ff:ff") /
                 IP(src="0.0.0.0", dst="255.255.255.255") /
@@ -130,11 +127,11 @@ class ClientDHCP:
                     op=OP_REQUEST,
                     siaddr=self.ip_add,
                     chaddr=mac2str(self.mac_address),
-                    xid=transaction_id
+                    xid=self.transaction_id
                 ) /
                 DHCP(options=[
                     ("message-type", MSG_TYPE_DECLINE),
-                    ("server_id", server_ip), "end"]
+                    ("server_id", self.server_ip), "end"]
                 )
         )
         sendp(decline_packet, verbose=False)
@@ -158,13 +155,12 @@ class ClientDHCP:
         pass
 
     def offer(self, offer_packet):
-        server_ip = offer_packet[IP].src
-        offered_addr = offer_packet[BOOTP].yiaddr
+        self.server_ip = offer_packet[IP].src
+        self.offered_addr = offer_packet[BOOTP].yiaddr
         transaction_id = offer_packet[BOOTP].xid
+        self.got_offer=True
 
-        return server_ip, offered_addr, transaction_id
-
-    def handle_offer(self, dhcp_packet):
+    def handle_packet(self, dhcp_packet):
         print("after sniff")
 
         if DHCP in dhcp_packet:
@@ -174,29 +170,38 @@ class ClientDHCP:
                 print('---')
                 print('New DHCP Offer')
                 self.offer(dhcp_packet)
+                return
 
             # Match DHCP ack
-            elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_ACK:
+            elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_ACK and dhcp_packet[IP].src == self.server_ip:
                 print('---')
                 print('New DHCP ACK')
                 self.set_ack(dhcp_packet)
+                return
 
             # Match DHCP ack
-            elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_NAK:
+            elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_NAK and dhcp_packet[IP].src == self.server_ip:
                 print('---')
                 print('New DHCP NAK')
+                self.got_nak = True
+                return
 
-    def start_client(self) -> None:
-        self.discover()
-        print("after discover")
-        while True:
-            try:
-                sniff(filter='udp and port 67', prn=self.handle_offer, count=1)
+            else:
+                self.start_sniff()
 
-            except Exception as e:
-                print(f"Unexpected error: {str(e)}")
+    def start_sniff(self) -> None:
+        try:
+            packet = sniff(filter=f'udp and port {self.server_port}', count=1)
+            thread = threading.Thread(target=self.handle_packet, args=packet)
+            thread.start()
+            thread.join()
+        except KeyboardInterrupt:
+            print("Shutting down...")
+
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
 
 
 if __name__ == '__main__':
     client = ClientDHCP()
-    client.start_client()
+    client.start_sniff()

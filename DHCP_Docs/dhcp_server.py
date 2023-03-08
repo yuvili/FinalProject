@@ -81,6 +81,7 @@ def ack(packet):
     if chosen_ip not in available_addresses:
         print("chosen address not available")
         nak(packet)
+        return
 
     info = {
         "MAC address": client_mac_add,
@@ -169,6 +170,8 @@ def handle_dhcp_packet(dhcp_packet):
             print('---')
             print('New DHCP Request')
             release(dhcp_packet)
+
+        #TODO: release
 
     # Match DHCP inform
     # elif DHCP in packet and packet[DHCP].options[0][1] == 8:

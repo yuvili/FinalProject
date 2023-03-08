@@ -1,7 +1,8 @@
+import threading
+from time import sleep
+
 from DHCP_Docs.dhcp_client import ClientDHCP
 from DNS_Docs.dns_client import ClientDNS
-from DHCP_Docs import dhcp_server
-from DNS_Docs import dns_server
 from tkinter import *
 
 
@@ -11,26 +12,44 @@ class Operator:
         self.dhcp_client = ClientDHCP()
         # self.dns_client = ClientDNS()
         self.window = None
-        # dhcp_server.start_server()
+        self.requested = False
 
     def set_window(self, window: Tk):
         self.window = window
 
-    def dhcp_generate_ip(self, gen_ip_screen):
+    def dhcp_generate_ip(self):
         self.dhcp_client.discover()
+        self.dhcp_client.start_sniff()
+        try:
+            while not self.dhcp_client.got_offer:
+                sleep(2)
 
-        Label(gen_ip_screen, text="").pack()
-        Button(gen_ip_screen, text="Approve", width=9, height=1,
-               command=lambda: self.dhcp_request()).place(relx=0.3, rely=0.4, anchor=CENTER)
-        Button(gen_ip_screen, text="Decline", width=9, height=1,
-               command=lambda: self.dhcp_decline()).place(relx=0.7, rely=0.4, anchor=CENTER)
-
-        offered_ip = Label(gen_ip_screen, text=f"You got the IP:{self.dhcp_client.ip_add}")
-        offered_ip.pack()
+            print("generated")
+            return self.dhcp_client.offered_addr
+        except RuntimeError:
+            print("RuntimeError")
 
     def dhcp_request(self):
-        pass
+        self.dhcp_client.request()
+        self.dhcp_client.start_sniff()
+        try:
+            while self.dhcp_client.ip_add == "0.0.0.0":
+                sleep(2)
+                if self.dhcp_client.got_nak:
+                    return False
+
+            if self.dhcp_client.ip_add != "0.0.0.0":
+                print("ack")
+                return True
+        except RuntimeError:
+            print("RuntimeError")
 
     def dhcp_decline(self):
-        pass
+        self.dhcp_client.decline()
+
+    def clear_screen(self, screen):
+        for widgets in screen.winfo_children():
+            widgets.destroy()
+
+
 

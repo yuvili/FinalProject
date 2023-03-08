@@ -1,5 +1,9 @@
+import threading
+from time import sleep
 from tkinter import *
 from tkinter.ttk import Labelframe
+
+from DHCP_Docs import dhcp_server
 from GUI import Operations
 
 
@@ -17,25 +21,78 @@ class MainGui:
         self.operator.set_window(self.window)
         self.window.mainloop()
 
-    def dhcp_op(self):
-        dhcp_screen = Toplevel(self.window)
-        dhcp_screen.title("DHCP Operations")
-        dhcp_screen.geometry("200x250")
+    def update_dhcp_screen(self, dhcp_screen):
+        dhcp_screen.destroy()
+        dhcp_screen.update()
+        self.dhcp_op()
 
-        Label(dhcp_screen, text="").pack()
-        Button(dhcp_screen, text="Generate IP", width=10, height=1,
-               command=lambda: self.dhcp_generateIP_frame(dhcp_screen)).place(relx=0.5, rely=0.2,
-                                                                                            anchor=CENTER)
-        Button(dhcp_screen, text="Release IP", width=10, height=1,
-               command=lambda: self.operator.dhcp_generate_ip(dhcp_screen)).place(relx=0.5, rely=0.3,
-                                                                                  anchor=CENTER)
+    def dhcp_client_request(self, gen_ip_screen, dhcp_screen):
+        ack_or_nak = self.operator.dhcp_request()
+        self.clear_screen(gen_ip_screen)
+        if ack_or_nak:
+            ack_label = Label(gen_ip_screen, text=f"Your request is approved!", foreground="green")
+            ack_label.pack()
+        else:
+            ack_label = Label(gen_ip_screen, text=f"Your request is denied!", foreground="red")
+            ack_label.pack()
+
+        approve_button = Button(gen_ip_screen, text="OK", width=9, height=1,
+                                command=lambda: self.update_dhcp_screen(dhcp_screen))
+        approve_button.place(relx=0.5, rely=0.4, anchor=CENTER)
+
+    def dhcp_client_decline(self, gen_ip_screen):
+        self.operator.dhcp_decline()
+        gen_ip_screen.destroy()
+        gen_ip_screen.update()
+
     def dhcp_generateIP_frame(self, dhcp_screen):
         gen_ip_screen = Toplevel(dhcp_screen)
         gen_ip_screen.title("Generate IP address")
         gen_ip_screen.geometry("300x250")
 
-        self.operator.dhcp_generate_ip(gen_ip_screen)
+        offered_ip = self.operator.dhcp_generate_ip()
+        Label(gen_ip_screen, text="").pack()
+        approve_button = Button(gen_ip_screen, text="Approve", width=9, height=1,
+                                command=lambda: self.dhcp_client_request(gen_ip_screen, dhcp_screen))
+        approve_button.place(relx=0.3, rely=0.4, anchor=CENTER)
 
+        decline_button = Button(gen_ip_screen, text="Decline", width=9, height=1,
+                                command=lambda: self.dhcp_client_decline(gen_ip_screen))
+        decline_button.place(relx=0.7, rely=0.4, anchor=CENTER)
+
+        offered_ip_label = Label(gen_ip_screen, text=f"You got the IP: {offered_ip}")
+        offered_ip_label.pack()
+
+    def dhcp_client_release(self, dhcp_screen):
+        self.operator.dhcp_client.release()
+
+        release_screen = Toplevel(dhcp_screen)
+        release_screen.title("Release IP Address")
+        release_screen.geometry("300x250")
+
+        Label(release_screen, text=f"Done", foreground="green").pack()
+        approve_button = Button(release_screen, text="OK", width=9, height=1,
+                                command=lambda: self.update_dhcp_screen(dhcp_screen))
+        approve_button.place(relx=0.5, rely=0.4, anchor=CENTER)
+
+    def dhcp_op(self):
+        dhcp_screen = Toplevel(self.window)
+        dhcp_screen.title("DHCP")
+        dhcp_screen.geometry("200x250")
+
+        Label(dhcp_screen, text="").pack()
+        generate_button = Button(dhcp_screen, text="Generate IP", width=10, height=1,
+               command=lambda: self.dhcp_generateIP_frame(dhcp_screen))
+
+        if self.operator.dhcp_client.ip_add != "0.0.0.0":
+            generate_button["state"] = "disabled"
+        generate_button.place(relx=0.5, rely=0.2, anchor=CENTER)
+
+        release_button = Button(dhcp_screen, text="Release IP", width=10, height=1,
+               command=lambda: self.dhcp_client_release(dhcp_screen))
+        if self.operator.dhcp_client.ip_add == "0.0.0.0":
+            release_button["state"] = "disabled"
+        release_button.place(relx=0.5, rely=0.3, anchor=CENTER)
 
     def build_main_frame(self):
         top_frame = Labelframe(self.window, text='Main Menu', width=300)
@@ -45,11 +102,17 @@ class MainGui:
         dhcp_button.pack(side='left', padx=5)
 
         dns_button = Button(top_frame, text="DNS Options", width=10, bg="green", fg="white",
-                                          command=self.dhcp_op, state=DISABLED)
+                                          command=self.dhcp_op, state="disabled")
         dns_button.pack(side='left', padx=5)
+
+    def clear_screen(self, screen):
+        for widgets in screen.winfo_children():
+            widgets.destroy()
 
 
 if __name__ == '__main__':
+    thread = threading.Thread(target=dhcp_server.start_server)
+    thread.start()
     gui = MainGui()
 
 #
