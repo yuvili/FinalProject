@@ -34,11 +34,12 @@ class ClientDHCP:
         self.client_port = 68
         self.server_port = 67
 
-        self.server_ip= ""
-        self.offered_addr= ""
+        self.server_ip= None
+        self.offered_addr= None
         self.transaction_id = None
         self.got_offer = False
         self.got_nak = False
+        self.ack_set = False
 
 
     def discover(self):
@@ -60,8 +61,11 @@ class ClientDHCP:
                 ) /
                 DHCP(options=[("message-type", MSG_TYPE_DISCOVER), "end"])
         )
+
+        thread_ack = threading.Thread(target=self.start_sniff)
+        thread_ack.start()
         sendp(packet, verbose=False)
-        print("send packet")
+        thread_ack.join()
 
     def request(self):
         """
@@ -88,7 +92,10 @@ class ClientDHCP:
                     ("requested_addr", self.offered_addr), "end"]
                 )
         )
+        thread_ack = threading.Thread(target=self.sniff_for_ack)
+        thread_ack.start()
         sendp(request_packet, verbose=False)
+        thread_ack.join()
 
     def renew_request(self):
         # After a DHCP client obtains an IP address, it unicasts or broadcasts a DHCP Request message to renew the IP address lease.
@@ -117,6 +124,7 @@ class ClientDHCP:
         self.ip_add = dhcp_ack[BOOTP].yiaddr
         self.subnet_mask = dhcp_ack[DHCP].options[3][1]
         self.router = dhcp_ack[DHCP].options[4][1]
+        self.ack_set = True
 
     def decline(self):
         decline_packet = (
@@ -157,14 +165,17 @@ class ClientDHCP:
     def offer(self, offer_packet):
         self.server_ip = offer_packet[IP].src
         self.offered_addr = offer_packet[BOOTP].yiaddr
-        transaction_id = offer_packet[BOOTP].xid
         self.got_offer=True
 
-    def handle_packet(self, dhcp_packet):
+    def handle_packet(self, dhcp_packet=None):
         print("after sniff")
+        if dhcp_packet is None:
+            print("no package")
+            return
 
         if DHCP in dhcp_packet:
             dhcp_packet.show()
+
             # Match DHCP offer
             if dhcp_packet[DHCP].options[0][1] == MSG_TYPE_OFFER:
                 print('---')
@@ -176,22 +187,37 @@ class ClientDHCP:
             elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_ACK and dhcp_packet[IP].src == self.server_ip:
                 print('---')
                 print('New DHCP ACK')
+                self.got_offer = False
                 self.set_ack(dhcp_packet)
                 return
 
-            # Match DHCP ack
+            # Match DHCP nak
             elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_NAK and dhcp_packet[IP].src == self.server_ip:
                 print('---')
                 print('New DHCP NAK')
                 self.got_nak = True
+                self.server_ip = None
+                self.offered_addr = None
+                self.got_offer = False
                 return
+        return
 
-            else:
-                self.start_sniff()
+    def sniff_for_ack(self) -> None:
+        try:
+            print("in sniff")
+            packet = sniff(filter=f'udp and port {self.server_port} and host {self.server_ip}', count=1, timeout=20)
+            thread = threading.Thread(target=self.handle_packet, args=packet)
+            thread.start()
+            thread.join()
+        except KeyboardInterrupt:
+            print("Shutting down...")
 
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
     def start_sniff(self) -> None:
         try:
-            packet = sniff(filter=f'udp and port {self.server_port}', count=1)
+            print("in sniff")
+            packet = sniff(filter=f'udp and port {self.server_port}', count=1, timeout=20)
             thread = threading.Thread(target=self.handle_packet, args=packet)
             thread.start()
             thread.join()

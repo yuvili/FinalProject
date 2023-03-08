@@ -10,7 +10,7 @@ class Operator:
 
     def __init__(self):
         self.dhcp_client = ClientDHCP()
-        # self.dns_client = ClientDNS()
+        self.dns_client = ClientDNS()
         self.window = None
         self.requested = False
 
@@ -19,24 +19,24 @@ class Operator:
 
     def dhcp_generate_ip(self):
         self.dhcp_client.discover()
-        self.dhcp_client.start_sniff()
         try:
             while not self.dhcp_client.got_offer:
-                sleep(2)
+                print("didnt get offer")
+                self.dhcp_client.discover()
 
             print("generated")
             return self.dhcp_client.offered_addr
-        except RuntimeError:
-            print("RuntimeError")
+        except Exception as e:
+            print(f"Error: {e}")
 
     def dhcp_request(self):
         self.dhcp_client.request()
-        self.dhcp_client.start_sniff()
         try:
             while self.dhcp_client.ip_add == "0.0.0.0":
-                sleep(2)
                 if self.dhcp_client.got_nak:
                     return False
+                if not self.dhcp_client.ack_set and not self.dhcp_client.got_nak:
+                    self.dhcp_client.request()
 
             if self.dhcp_client.ip_add != "0.0.0.0":
                 print("ack")

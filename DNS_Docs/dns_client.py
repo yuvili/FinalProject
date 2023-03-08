@@ -18,10 +18,6 @@ class ClientDNS(Client):
             self.subnet_mask = clientdhcp.subnet_mask
             self.router = clientdhcp.router
 
-        if self.ip_add is "0.0.0.0":
-            pass
-            # TODO-1: if ip is "0.0.0.0" go to dhcp server and get an IP
-
     def is_response(self, dns_packet):
         print("found a responce")
         if DNS in dns_packet and dns_packet[DNS].qr == 1:

@@ -14,7 +14,6 @@ class MainGui:
         self.window = Tk()
         self.window.title("Final Project")
         self.window.minsize(width=500, height=300)
-        self.window.config(bg="white")
         self.window.resizable(width=False, height=False)
         self.operator = Operations.Operator()
         self.build_main_frame()
@@ -48,10 +47,10 @@ class MainGui:
     def dhcp_generateIP_frame(self, dhcp_screen):
         gen_ip_screen = Toplevel(dhcp_screen)
         gen_ip_screen.title("Generate IP address")
-        gen_ip_screen.geometry("300x250")
+        gen_ip_screen.geometry("300x200")
 
         offered_ip = self.operator.dhcp_generate_ip()
-        Label(gen_ip_screen, text="").pack()
+
         approve_button = Button(gen_ip_screen, text="Approve", width=9, height=1,
                                 command=lambda: self.dhcp_client_request(gen_ip_screen, dhcp_screen))
         approve_button.place(relx=0.3, rely=0.4, anchor=CENTER)
@@ -78,32 +77,35 @@ class MainGui:
     def dhcp_op(self):
         dhcp_screen = Toplevel(self.window)
         dhcp_screen.title("DHCP")
-        dhcp_screen.geometry("200x250")
+        dhcp_screen.geometry("200x200")
 
-        Label(dhcp_screen, text="").pack()
         generate_button = Button(dhcp_screen, text="Generate IP", width=10, height=1,
                command=lambda: self.dhcp_generateIP_frame(dhcp_screen))
 
         if self.operator.dhcp_client.ip_add != "0.0.0.0":
             generate_button["state"] = "disabled"
-        generate_button.place(relx=0.5, rely=0.2, anchor=CENTER)
+        generate_button.place(relx=0.5, rely=0.3, anchor="center")
 
         release_button = Button(dhcp_screen, text="Release IP", width=10, height=1,
                command=lambda: self.dhcp_client_release(dhcp_screen))
         if self.operator.dhcp_client.ip_add == "0.0.0.0":
             release_button["state"] = "disabled"
-        release_button.place(relx=0.5, rely=0.3, anchor=CENTER)
+        release_button.place(relx=0.5, rely=0.45, anchor="center")
 
+    def dns_op(self):
+        if self.operator.dhcp_client.ip_add == "0.0.0.0":
+            error_label = Label(self.window, text='Please claim an IP address first' , font=("Helvetica", 15), foreground="red")
+            error_label.pack()
     def build_main_frame(self):
-        top_frame = Labelframe(self.window, text='Main Menu', width=300)
-        top_frame.pack(padx=15)
+        top_label = Label(self.window, text='Main Menu', font=("Helvetica", 25))
+        top_label.pack()
 
-        dhcp_button = Button(top_frame, text="DHCP Options", width=10, command=self.dhcp_op)
-        dhcp_button.pack(side='left', padx=5)
+        dhcp_button = Button(self.window, text="DHCP Options", width=10, command=self.dhcp_op)
+        dhcp_button.pack(pady=10)
 
-        dns_button = Button(top_frame, text="DNS Options", width=10, bg="green", fg="white",
-                                          command=self.dhcp_op, state="disabled")
-        dns_button.pack(side='left', padx=5)
+        dns_button = Button(self.window, text="DNS Options", width=10,
+                                          command=self.dhcp_op)
+        dns_button.pack()
 
     def clear_screen(self, screen):
         for widgets in screen.winfo_children():

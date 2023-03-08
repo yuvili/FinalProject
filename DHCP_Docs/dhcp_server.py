@@ -3,6 +3,8 @@
 # Lease time - Thread that always checks TTL for the IP address
 
 import threading
+from time import sleep
+
 from scapy.layers.dhcp import DHCP, BOOTP
 from scapy.layers.l2 import Ether
 from scapy.layers.inet import IP, UDP
@@ -14,6 +16,7 @@ import random
 MSG_TYPE_DISCOVER = 1
 MSG_TYPE_OFFER = 2
 MSG_TYPE_REQUEST = 3
+MSG_TYPE_DECLINE = 4
 MSG_TYPE_ACK = 5
 MSG_TYPE_NAK = 6
 MSG_TYPE_RELEASE = 7
@@ -63,7 +66,6 @@ def offer(packet):
                 ("lease_time", LEASE),
                 ("subnet_mask", "255.255.255.0"),
                 ("router", "10.0.01"),
-                # ("broadcast_address", "127.0.0.255"),
                 ("name_server", "10.0.01"),
                 ("domain", "localdomain"),
                 "end"]
@@ -161,34 +163,31 @@ def handle_dhcp_packet(dhcp_packet):
 
         # Match DHCP request
         elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_REQUEST:
+            for op in dhcp_packet[DHCP].options:
+                if op[0] == "server_id":
+                    if op[1] != SERVER_IP:
+                        print('---')
+                        print('New DHCP Request to different server')
+                        nak(dhcp_packet)
+                        return
             print('---')
             print('New DHCP Request')
             ack(dhcp_packet)
 
-        # Match DHCP request
+        # Match DHCP release
         elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_RELEASE:
             print('---')
-            print('New DHCP Request')
+            print('New DHCP Release')
             release(dhcp_packet)
 
-        #TODO: release
-
-    # Match DHCP inform
-    # elif DHCP in packet and packet[DHCP].options[0][1] == 8:
-    #     print('---')
-    #     print('New DHCP Inform')
-    #     #print(packet.summary())
-    #     #print(ls(packet))
-    #
-    #     hostname = get_option(packet[DHCP].options, 'hostname')
-    #     vendor_class_id = get_option(packet[DHCP].options, 'vendor_class_id')
-    #
-    #     print(f"DHCP Inform from {packet[IP].src} ({packet[Ether].src}) "
-    #           f"hostname: {hostname}, vendor_class_id: {vendor_class_id}")
+        # Match DHCP decline
+        elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_DECLINE:
+            print('---')
+            print('New DHCP Decline')
 
     else:
         print('---')
-        print('Some Other DHCP Packet')
+        print('Some Other UDP Packet')
         print(dhcp_packet.summary())
 
 
@@ -207,17 +206,6 @@ def start_server() -> None:
 
     for thread in threads:  # Wait for all threads to finish
         thread.join()
-
-
-# def generate_mac_address():
-#     # Generate a random MAC address
-#     mac = [random.randint(0x00, 0xff) for i in range(6)]
-#     return ':'.join([format(byte, '02x') for byte in mac])
-#
-# def generate_ip_address():
-#     # Generate a random IP address in the range 192.168.0.2 to 192.168.0.254
-#     octets = [192, 168, 0, random.randint(2, 254)]
-#     return '.'.join([str(octet) for octet in octets])
 
 if __name__ == '__main__':
     start_server()
