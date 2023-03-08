@@ -10,9 +10,12 @@ class Operator:
 
     def __init__(self):
         self.dhcp_client = ClientDHCP()
-        self.dns_client = ClientDNS()
+        self.dns_client = None
         self.window = None
         self.requested = False
+
+    def set_dns_client(self):
+        self.dns_client = ClientDNS(self.dhcp_client)
 
     def set_window(self, window: Tk):
         self.window = window
@@ -47,9 +50,10 @@ class Operator:
     def dhcp_decline(self):
         self.dhcp_client.decline()
 
-    def clear_screen(self, screen):
-        for widgets in screen.winfo_children():
-            widgets.destroy()
+    def dns_query(self, hostname_entry):
+        self.set_dns_client()
+        hostname = hostname_entry.get()
+        self.dns_client.send_dns_query(hostname)
 
 
 

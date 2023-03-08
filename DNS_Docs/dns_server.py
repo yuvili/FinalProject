@@ -1,10 +1,12 @@
 # TODO-1: Database (file or a dictionary) - define a TTL for each hostname
 # TODO-2: find answer in cache or use os and sys
 
-from scapy.layers.dns import DNSQR, DNS, DNSRR, IP
-from scapy.layers.inet import UDP
-from scapy.all import *
+from scapy.layers.dns import DNSQR, DNS, DNSRR
+from scapy.layers.inet import IP, UDP
+from scapy.sendrecv import *
 from socket import *
+import threading
+
 
 DNS_IP = "192.168.1.1"
 
@@ -47,11 +49,9 @@ def start_server():
     while True:
         try:
             packet = sniff(filter="udp and port 53", count=1)
-            packet.summary()
             thread = threading.Thread(target=dns_server, args=packet)
             thread.start()
             threads.append(thread)
-
         except KeyboardInterrupt:
             print("Shutting down...")
             break

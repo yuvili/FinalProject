@@ -2,15 +2,17 @@ from scapy.layers.dns import DNS, DNSQR, DNSRR
 from scapy.layers.inet import UDP, IP
 from scapy.sendrecv import sniff, send
 from DHCP_Docs.dhcp_client import ClientDHCP
-from client_main import Client
 
 
-class ClientDNS(Client):
+class ClientDNS():
 
     def __init__(self,clientdhcp:ClientDHCP=None):
-        super().__init__()
         self.client_port = 57217
         self.server_port = 53
+        self.ip_add = None
+        self.dns_server_add = None
+        self.subnet_mask = None
+        self.router = None
 
         if clientdhcp is not None:
             self.ip_add = clientdhcp.ip_add
@@ -24,6 +26,7 @@ class ClientDNS(Client):
             self.parse_dns_response(dns_packet)
 
     def send_dns_query(self, hostname):
+        print(self.ip_add)
         # Build a DNS query packet
         packet = (
                 IP(src=self.ip_add, dst=self.dns_server_add) /

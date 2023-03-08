@@ -1,9 +1,7 @@
 import threading
-from time import sleep
 from tkinter import *
-from tkinter.ttk import Labelframe
-
 from DHCP_Docs import dhcp_server
+from DNS_Docs import dns_server
 from GUI import Operations
 
 
@@ -16,7 +14,7 @@ class MainGui:
         self.window.minsize(width=500, height=300)
         self.window.resizable(width=False, height=False)
         self.operator = Operations.Operator()
-        self.build_main_frame()
+        self.main_frame()
         self.operator.set_window(self.window)
         self.window.mainloop()
 
@@ -96,7 +94,25 @@ class MainGui:
         if self.operator.dhcp_client.ip_add == "0.0.0.0":
             error_label = Label(self.window, text='Please claim an IP address first' , font=("Helvetica", 15), foreground="red")
             error_label.pack()
-    def build_main_frame(self):
+            return
+
+
+        dns_screen = Toplevel(self.window)
+        dns_screen.title("DNS Query")
+        dns_screen.geometry("400x200")
+
+        head_label = Label(dns_screen, text='Please enter your hostname address:', font=("Helvetica", 15))
+        head_label.pack(pady=10)
+
+        hostname= StringVar()
+        hostname_entry = Entry(dns_screen, width=30, textvariable=hostname)
+        hostname_entry.pack(pady=10)
+
+        generate_button = Button(dns_screen, text="Search", width=10, height=1,
+                                 command=lambda: self.operator.dns_query(hostname_entry))
+        generate_button.pack()
+
+    def main_frame(self):
         top_label = Label(self.window, text='Main Menu', font=("Helvetica", 25))
         top_label.pack()
 
@@ -104,7 +120,7 @@ class MainGui:
         dhcp_button.pack(pady=10)
 
         dns_button = Button(self.window, text="DNS Options", width=10,
-                                          command=self.dhcp_op)
+                                          command=self.dns_op)
         dns_button.pack()
 
     def clear_screen(self, screen):
@@ -113,8 +129,8 @@ class MainGui:
 
 
 if __name__ == '__main__':
-    thread = threading.Thread(target=dhcp_server.start_server)
-    thread.start()
+    threading.Thread(target=dhcp_server.start_server).start()
+    threading.Thread(target=dns_server.start_server).start()
     gui = MainGui()
 
 #

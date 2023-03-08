@@ -3,8 +3,6 @@
 # Lease time - Thread that always checks TTL for the IP address
 
 import threading
-from time import sleep
-
 from scapy.layers.dhcp import DHCP, BOOTP
 from scapy.layers.l2 import Ether
 from scapy.layers.inet import IP, UDP
