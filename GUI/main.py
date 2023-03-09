@@ -149,6 +149,10 @@ class MainGui:
         head_label = CTkLabel(self.op_frame, text=f'The IP of host \n{hostname} is: \n{ip_answer}', font=("Helvetica", 15))
         head_label.grid(row=0, column=0, padx=(60,60), pady=110)
 
+        approve_button = CTkButton(self.op_frame, text="New Query",
+                                   command=self.dns_screen)
+        approve_button.grid(row=2, column=0, padx=(60, 60), pady=10)
+
     def dns_screen(self):
         self.clear_screen(self.op_frame)
 
@@ -171,6 +175,7 @@ class MainGui:
         dhcp_textbox = CTkTextbox(self.mid_frame, width=250, height=380)
         dhcp_textbox.grid(row=0, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
 
+        # TODO: update - please fill an hostname if the format of www.name.org/com/...
         dhcp_info_text = 'DNS\n\nIn this page you will have an option to \ngenerate yourself an IP ' \
                          'address, in \ncase you don`t have on, or release \nyour current IP address. ' \
                          '\nBy default, when starting the program your IP address is "0.0.0.0", so please start' \
