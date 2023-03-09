@@ -8,9 +8,9 @@ from socket import *
 import threading
 
 
-DNS_IP = "192.168.1.1"
+DNS_IP = "10.0.01"
 
-DNS_Question_Record = {}
+DNS_Cache = {}
 
 # Berkeley Packet Filter for sniffing specific DNS packet only
 packet_filter = " and ".join([
@@ -23,15 +23,19 @@ def dns_server(packet):
     # Handle incoming DNS queries
     if DNSQR in packet and packet[DNSQR].qtype == 1:
         print("got a request")
-        hostname = packet[DNS].qd[DNSQR].qname
-        if hostname in DNS_Question_Record:
+        hostname = packet[DNS].qd[DNSQR].qname.decode('utf-8')
+        hostname = hostname[0:-1]
+        print("from server hostname: "+hostname)
+
+        if len(DNS_Cache) != 0 and hostname in DNS_Cache:
             print("found in cache")
-            ip_address = DNS_Question_Record[hostname].ip
-            hostname_ttl = DNS_Question_Record[hostname].ttl
+            ip_address = DNS_Cache[hostname].ip
+            hostname_ttl = DNS_Cache[hostname].ttl
+
         else:
             ip_address = gethostbyname(hostname)
             hostname_ttl = 10
-            DNS_Question_Record[hostname] = {"ip": ip_address, "ttl": hostname_ttl}
+            DNS_Cache[hostname] = {"ip": ip_address, "ttl": hostname_ttl}
 
         # Create a DNS response packet with the IP address of the DNS server
         resp_packet = (
@@ -43,21 +47,13 @@ def dns_server(packet):
         send(resp_packet, verbose=False)
         print("sent answer")
 
-
 def start_server():
-    threads = []
     while True:
         try:
-            packet = sniff(filter="udp and port 53", count=1)
-            thread = threading.Thread(target=dns_server, args=packet)
-            thread.start()
-            threads.append(thread)
+            sniff(filter="udp and port 53",prn=dns_server, count=1)
         except KeyboardInterrupt:
             print("Shutting down...")
             break
-
-    for thread in threads:  # Wait for all threads to finish
-        thread.join()
 
 
 if __name__ == '__main__':

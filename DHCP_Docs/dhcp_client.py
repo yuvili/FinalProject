@@ -124,6 +124,7 @@ class ClientDHCP:
         self.ip_add = dhcp_ack[BOOTP].yiaddr
         self.subnet_mask = dhcp_ack[DHCP].options[3][1]
         self.router = dhcp_ack[DHCP].options[4][1]
+        self.dns_server_add = dhcp_ack[DHCP].options[5][1]
         self.ack_set = True
 
     def decline(self):

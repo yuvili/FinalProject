@@ -10,12 +10,15 @@ class Operator:
 
     def __init__(self):
         self.dhcp_client = ClientDHCP()
-        self.dns_client = None
+        self.dns_client = ClientDNS()
         self.window = None
         self.requested = False
 
     def set_dns_client(self):
-        self.dns_client = ClientDNS(self.dhcp_client)
+        self.dns_client.ip_add = self.dhcp_client.ip_add
+        self.dns_client.dns_server_add = self.dhcp_client.dns_server_add
+        self.dns_client.subnet_mask = self.dhcp_client.subnet_mask
+        self.dns_client.router = self.dhcp_client.router
 
     def set_window(self, window: Tk):
         self.window = window
@@ -50,10 +53,10 @@ class Operator:
     def dhcp_decline(self):
         self.dhcp_client.decline()
 
-    def dns_query(self, hostname_entry):
+    def dns_query(self, hostname):
         self.set_dns_client()
-        hostname = hostname_entry.get()
         self.dns_client.send_dns_query(hostname)
+        return self.dns_client.ip_result
 
 
 
