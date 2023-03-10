@@ -23,7 +23,6 @@ class ClientDNS():
             self.parse_dns_response(dns_packet)
 
     def send_dns_query(self, hostname):
-        print(self.ip_add)
         # Build a DNS query packet
         packet = (
                 IP(src=self.ip_add, dst=self.dns_server_add) /

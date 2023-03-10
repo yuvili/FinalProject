@@ -9,6 +9,8 @@ from scapy.layers.inet import IP, UDP
 from scapy.sendrecv import *
 from scapy.utils import mac2str
 import random
+import socket
+from socket import *
 
 # DHCP message types
 MSG_TYPE_DISCOVER = 1
@@ -25,6 +27,7 @@ OP_REQUEST = 1
 OP_REPLY = 2
 
 SERVER_IP = "10.0.0.1"
+DNS_SERVER_IP = '127.0.0.1'
 SERVER_PORT = 67
 CLIENT_PORT = 68
 SCOPE = 254
@@ -42,8 +45,8 @@ def generate_ip_addresses():
 
 def offer(packet):
     print("start offer")
-    if packet[IP].src != "0.0.0.0":
-        return
+    # if packet[IP].src != "0.0.0.0":
+    #     return
     client_mac_add = packet[Ether].src
     offered_ip = random.choice(available_addresses)
     transaction_id = packet[BOOTP].xid
@@ -64,7 +67,7 @@ def offer(packet):
                 ("lease_time", LEASE),
                 ("subnet_mask", "255.255.255.0"),
                 ("router", "10.0.0.1"),
-                ("name_server", "10.0.0.1"),
+                ("name_server", DNS_SERVER_IP),
                 ("domain", "localdomain"),
                 "end"]
             )
@@ -108,7 +111,7 @@ def ack(packet):
                 ("lease_time", LEASE),
                 ("broadcast_address", "127.0.0.255"),
                 ("router", "10.0.0.1"),
-                ("name_server", "10.0.0.1"),
+                ("name_server", DNS_SERVER_IP),
                 "end"]
             )
     )
@@ -153,10 +156,16 @@ def handle_dhcp_packet(dhcp_packet):
             nak(dhcp_packet)
             return
 
+        if dhcp_packet[DHCP].options[0][1] == MSG_TYPE_OFFER:
+            print('---')
+            print('Some Offer')
+            return
+
         # Match DHCP discover
         if dhcp_packet[DHCP].options[0][1] == MSG_TYPE_DISCOVER:
             print('---')
             print('New DHCP Discover')
+            dhcp_packet.show()
             offer(dhcp_packet)
 
         # Match DHCP request
@@ -189,12 +198,27 @@ def handle_dhcp_packet(dhcp_packet):
         print(dhcp_packet.summary())
 
 
+
 def start_server() -> None:
     threads = []
     generate_ip_addresses()  # Creating the database of all the available IP address
+    sniffer_socket = socket(AF_INET, SOCK_DGRAM)
+    sniffer_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    sniffer_socket.bind(('0.0.0.0', 67))
+    sniffer_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
     while True:
         try:
-            packet = sniff(filter=f'udp and port {CLIENT_PORT}', count=1)
+            # print("sniff")
+            # packet = sniff(filter=f'udp and port {CLIENT_PORT}', count=1)
+            # if DHCP in packet[0]:
+            #     if packet[0][BOOTP].op == 1:
+            #         packet.show()
+            #         thread = threading.Thread(target=handle_dhcp_packet, args=packet)
+            #         thread.start()
+            #         threads.append(thread)
+            packet = sniffer_socket.recv(2048)
+            print(packet[0:2])
+            # handle_dhcp_packet(packet)
             thread = threading.Thread(target=handle_dhcp_packet, args=packet)
             thread.start()
             threads.append(thread)

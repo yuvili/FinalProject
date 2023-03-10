@@ -1,7 +1,8 @@
 import threading
 from customtkinter import *
-from DHCP_Docs import dhcp_server
-from DNS_Docs import dns_server
+# from DHCP_Docs import dhcp_server
+from DHCP_Docs import server
+from DNS_Docs import dns_server, ServerDNS
 from GUI import Operations
 
 
@@ -27,7 +28,7 @@ class MainGui:
 
         self.dns_button = CTkButton(self.main_menu_frame, text="DNS Options", command=self.dns_screen)
         self.dns_button.grid(row=2, column=0, padx=20, pady=10)
-        if self.operator.dhcp_client.ip_add == "0.0.0.0":
+        if self.operator.dhcp_client.ip_address == "0.0.0.0":
             self.dns_button.configure(state="disabled")
 
         self.http_button = CTkButton(self.main_menu_frame, text="HTTP Application", command=self.dns_screen)
@@ -51,7 +52,7 @@ class MainGui:
         self.dns_button.destroy()
         self.dns_button = CTkButton(self.main_menu_frame, text="DNS Options", command=self.dns_screen)
         self.dns_button.grid(row=2, column=0, padx=20, pady=10)
-        if self.operator.dhcp_client.ip_add == "0.0.0.0":
+        if self.operator.dhcp_client.ip_address == "0.0.0.0":
             self.dns_button.configure(state="disabled")
 
 
@@ -114,12 +115,12 @@ class MainGui:
         dhcp_actions.grid(row=0, column=0, padx=20, pady=(60, 10))
 
         generate_button = CTkButton(self.op_frame, text="Generate IP Address", command=self.dhcp_generateIP_frame)
-        if self.operator.dhcp_client.ip_add != "0.0.0.0":
+        if self.operator.dhcp_client.ip_address != "0.0.0.0":
             generate_button.configure(state="disabled")
         generate_button.grid(row=1, column=0, padx=(60, 60), pady=10)
 
         release_button = CTkButton(self.op_frame, text="Release IP", command=self.dhcp_client_release)
-        if self.operator.dhcp_client.ip_add == "0.0.0.0":
+        if self.operator.dhcp_client.ip_address == "0.0.0.0":
             release_button.configure(state="disabled")
         release_button.grid(row=2, column=0, padx=(60, 60), pady=10)
 
@@ -169,7 +170,6 @@ class MainGui:
 
 
     def dns_screen(self):
-        threading.Thread(target=dns_server.start_server).start()
         self.clear_screen(self.mid_frame)
 
         dhcp_textbox = CTkTextbox(self.mid_frame, width=250, height=380)
@@ -195,13 +195,13 @@ class MainGui:
 
         client_details = {
             "Physical Address": client.mac_address,
-            "IPv4": client.ip_add,
+            "IPv4": client.ip_address,
             "IPv4 Subnet Mask": client.subnet_mask,
             "Lease Obtain": client.lease_obtain,
             "Lease Expires": client.lease_expires,
             "IPv4 Default Gateway": client.router,
             "IPv4 DHCP Server": client.dhcp_server_ip,
-            "IPv4 DNS Server": client.dns_server_add
+            "IPv4 DNS Server": client.dns_server_address
         }
         i=0
         for detail in client_details:
@@ -233,7 +233,6 @@ class MainGui:
         dhcp_textbox.insert("0.0", dhcp_info_text)
         self.client_info_details()
 
-
     def main_frame(self):
         top_label = CTkLabel(self.main_menu_frame, text='Main Menu', font=("Tahoma", 25))
         top_label.grid(row=0, column=0, padx=20, pady=(20, 10))
@@ -243,7 +242,7 @@ class MainGui:
 
         dns_button = CTkButton(self.main_menu_frame, text="DNS Options", command=self.dns_screen)
         dns_button.grid(row=2, column=0, padx=20, pady=10)
-        if self.operator.dhcp_client.ip_add == "0.0.0.0":
+        if self.operator.dhcp_client.ip_address == "0.0.0.0":
             dns_button.configure(state="disabled")
 
         http_button = CTkButton(self.main_menu_frame, text="HTTP Application", command=self.dns_screen)
@@ -270,5 +269,7 @@ class MainGui:
 
 
 if __name__ == '__main__':
-    threading.Thread(target=dhcp_server.start_server).start()
+    threading.Thread(target=server.start_server).start()
+    threading.Thread(target=ServerDNS.start_server).start()
+
     gui = MainGui()
