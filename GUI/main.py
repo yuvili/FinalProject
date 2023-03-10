@@ -176,13 +176,14 @@ class MainGui:
         dhcp_textbox.grid(row=0, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
 
         # TODO: update - please fill an hostname if the format of www.name.org/com/...
-        dhcp_info_text = 'DNS\n\nIn this page you will have an option to \ngenerate yourself an IP ' \
-                         'address, in \ncase you don`t have on, or release \nyour current IP address. ' \
-                         '\nBy default, when starting the program your IP address is "0.0.0.0", so please start' \
-                         ' with generating an address.\n\n' \
-                         'The "Generate IP Address" option is \navailable only in case when your IP \nis "0.0.0.0".' \
-                         '\nIn case when you have a different IP \naddress and you wish to replace it, \nplease release your IP with "Release \nIP"' \
-                         ' action first.'
+        dhcp_info_text = 'DNS\n\nIn this page you will have an option to \nmake a DNS query ' \
+                         'where you will \nprovide a hostname and as a result, \nyou will get the corresponding IP ' \
+                         '\naddress.\n\n'\
+                         'Notice that this option won`t be \navailable if you haven`t generated \nyourself an IP address' \
+                         'yet through the DHCP option menu.' \
+                         '\n\nWhen making a DNS query, please fill out an address in the form of:' \
+                         '\n'
+
         dhcp_textbox.insert("0.0", dhcp_info_text)
 
         self.dns_screen()
