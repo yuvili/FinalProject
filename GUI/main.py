@@ -25,19 +25,19 @@ class MainGui:
         self.dhcp_button = CTkButton(self.main_menu_frame, text="DHCP Options", command=self.dhcp_op)
         self.dhcp_button.grid(row=1, column=0, padx=20, pady=10)
 
-        self.dns_button = CTkButton(self.main_menu_frame, text="DNS Options", command=self.dns_op)
+        self.dns_button = CTkButton(self.main_menu_frame, text="DNS Options", command=self.dns_screen)
         self.dns_button.grid(row=2, column=0, padx=20, pady=10)
         if self.operator.dhcp_client.ip_add == "0.0.0.0":
             self.dns_button.configure(state="disabled")
 
-        self.http_button = CTkButton(self.main_menu_frame, text="HTTP Application", command=self.dns_op)
+        self.http_button = CTkButton(self.main_menu_frame, text="HTTP Application", command=self.dns_screen)
         self.http_button.grid(row=3, column=0, padx=20, pady=10)
 
         CTkLabel(self.main_menu_frame, text='').grid(row=4, column=0, padx=20, pady=10)
         CTkLabel(self.main_menu_frame, text='').grid(row=5, column=0, padx=20, pady=10)
         CTkLabel(self.main_menu_frame, text='').grid(row=6, column=0, padx=20, pady=10)
 
-        self.client_details_button = CTkButton(self.main_menu_frame, text="Client Info", command=self.dns_op)
+        self.client_details_button = CTkButton(self.main_menu_frame, text="Client Info", command=self.dns_screen)
         self.client_details_button.grid(row=7, column=0, padx=20, pady=10)
 
         self.mid_frame = CTkFrame(self.window, width=500,)
@@ -49,7 +49,7 @@ class MainGui:
 
     def update_dns_button(self):
         self.dns_button.destroy()
-        self.dns_button = CTkButton(self.main_menu_frame, text="DNS Options", command=self.dns_op)
+        self.dns_button = CTkButton(self.main_menu_frame, text="DNS Options", command=self.dns_screen)
         self.dns_button.grid(row=2, column=0, padx=20, pady=10)
         if self.operator.dhcp_client.ip_add == "0.0.0.0":
             self.dns_button.configure(state="disabled")
@@ -124,6 +124,7 @@ class MainGui:
         release_button.grid(row=2, column=0, padx=(60, 60), pady=10)
 
     def dhcp_op(self):
+        # TODO: move the initialisation to the main and add some explanation of the program
         self.middle_frame()
         self.opp_frame()
 
@@ -150,10 +151,10 @@ class MainGui:
         head_label.grid(row=0, column=0, padx=(60,60), pady=110)
 
         approve_button = CTkButton(self.op_frame, text="New Query",
-                                   command=self.dns_screen)
+                                   command=self.dns_control_screen)
         approve_button.grid(row=2, column=0, padx=(60, 60), pady=10)
 
-    def dns_screen(self):
+    def dns_control_screen(self):
         self.clear_screen(self.op_frame)
 
         dhcp_actions = CTkLabel(self.op_frame, text="Please enter your hostname address:", font=CTkFont(size=15, weight="bold"))
@@ -167,10 +168,9 @@ class MainGui:
         approve_button.grid(row=2, column=0, padx=(60, 60), pady=10)
 
 
-    def dns_op(self):
+    def dns_screen(self):
         threading.Thread(target=dns_server.start_server).start()
         self.clear_screen(self.mid_frame)
-        self.clear_screen(self.op_frame)
 
         dhcp_textbox = CTkTextbox(self.mid_frame, width=250, height=380)
         dhcp_textbox.grid(row=0, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
@@ -186,7 +186,53 @@ class MainGui:
 
         dhcp_textbox.insert("0.0", dhcp_info_text)
 
-        self.dns_screen()
+        self.dns_control_screen()
+
+    def client_info_details(self):
+        self.clear_screen(self.op_frame)
+
+        client = self.operator.dhcp_client
+
+        client_details = {
+            "Physical Address": client.mac_address,
+            "IPv4": client.ip_add,
+            "IPv4 Subnet Mask": client.subnet_mask,
+            "Lease Obtain": client.lease_obtain,
+            "Lease Expires": client.lease_expires,
+            "IPv4 Default Gateway": client.router,
+            "IPv4 DHCP Server": client.dhcp_server_ip,
+            "IPv4 DNS Server": client.dns_server_add
+        }
+        i=0
+        for detail in client_details:
+            CTkLabel(self.op_frame, text=f"{detail}: ",
+                                font=CTkFont(size=15, weight="bold"), anchor="nw")\
+                .grid(row=i, column=0, pady=10)
+            CTkLabel(self.op_frame, text=client_details[detail],
+                     font=CTkFont(size=15), anchor="nw") \
+                .grid(row=i, column=1, pady=10)
+            i+=1
+
+    def client_info_screen(self):
+        # self.clear_screen(self.mid_frame)
+        self.middle_frame()
+        self.opp_frame()
+
+        dhcp_textbox = CTkTextbox(self.mid_frame, width=250, height=380)
+        dhcp_textbox.grid(row=0, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
+
+        # TODO: update - please fill an hostname if the format of www.name.org/com/...
+        dhcp_info_text = 'DNS\n\nIn this page you will have an option to \nmake a DNS query ' \
+                         'where you will \nprovide a hostname and as a result, \nyou will get the corresponding IP ' \
+                         '\naddress.\n\n' \
+                         'Notice that this option won`t be \navailable if you haven`t generated \nyourself an IP address' \
+                         'yet through the DHCP option menu.' \
+                         '\n\nWhen making a DNS query, please fill out an address in the form of:' \
+                         '\n'
+
+        dhcp_textbox.insert("0.0", dhcp_info_text)
+        self.client_info_details()
+
 
     def main_frame(self):
         top_label = CTkLabel(self.main_menu_frame, text='Main Menu', font=("Tahoma", 25))
@@ -195,19 +241,19 @@ class MainGui:
         dhcp_button = CTkButton(self.main_menu_frame, text="DHCP Options", command=self.dhcp_op)
         dhcp_button.grid(row=1, column=0, padx=20, pady=10)
 
-        dns_button = CTkButton(self.main_menu_frame, text="DNS Options", command=self.dns_op)
+        dns_button = CTkButton(self.main_menu_frame, text="DNS Options", command=self.dns_screen)
         dns_button.grid(row=2, column=0, padx=20, pady=10)
         if self.operator.dhcp_client.ip_add == "0.0.0.0":
             dns_button.configure(state="disabled")
 
-        http_button = CTkButton(self.main_menu_frame, text="HTTP Application", command=self.dns_op)
+        http_button = CTkButton(self.main_menu_frame, text="HTTP Application", command=self.dns_screen)
         http_button.grid(row=3, column=0, padx=20, pady=10)
 
         CTkLabel(self.main_menu_frame, text='').grid(row=4, column=0, padx=20, pady=10)
         CTkLabel(self.main_menu_frame, text='').grid(row=5, column=0, padx=20, pady=10)
         CTkLabel(self.main_menu_frame, text='').grid(row=6, column=0, padx=20, pady=10)
 
-        client_details_button = CTkButton(self.main_menu_frame, text="Client Info", command=self.dns_op)
+        client_details_button = CTkButton(self.main_menu_frame, text="Client Info", command=self.client_info_screen)
         client_details_button.grid(row=7, column=0, padx=20, pady=10)
 
     def middle_frame(self):

@@ -63,8 +63,8 @@ def offer(packet):
                 ("server_id", SERVER_IP),
                 ("lease_time", LEASE),
                 ("subnet_mask", "255.255.255.0"),
-                ("router", "10.0.01"),
-                ("name_server", "10.0.01"),
+                ("router", "10.0.0.1"),
+                ("name_server", "10.0.0.1"),
                 ("domain", "localdomain"),
                 "end"]
             )
@@ -107,8 +107,8 @@ def ack(packet):
                 ("server_id", SERVER_IP),
                 ("lease_time", LEASE),
                 ("broadcast_address", "127.0.0.255"),
-                ("router", "192.168.1.1"),
-                ("name_server", "192.168.1.1"),
+                ("router", "10.0.0.1"),
+                ("name_server", "10.0.0.1"),
                 "end"]
             )
     )

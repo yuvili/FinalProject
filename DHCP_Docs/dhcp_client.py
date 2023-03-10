@@ -7,6 +7,8 @@ from scapy.layers.inet import IP, UDP
 from scapy.layers.dhcp import BOOTP, DHCP
 from scapy.sendrecv import sendp, sniff
 from scapy.utils import mac2str
+from datetime import datetime, timedelta
+
 
 # DHCP message types
 MSG_TYPE_DISCOVER = 1
@@ -29,12 +31,15 @@ class ClientDHCP:
         self.mac_address = gma()  # Extracting the mac address of this computer
         self.ip_add = "0.0.0.0"  # Client's IP address
         self.dns_server_add = ""  # DNS server IP address
+        self.lease_obtain = None
+        self.lease = None
+        self.lease_expires= None
         self.subnet_mask = None
         self.router = None
         self.client_port = 68
         self.server_port = 67
 
-        self.server_ip= None
+        self.dhcp_server_ip= None
         self.offered_addr= None
         self.transaction_id = None
         self.got_offer = False
@@ -88,7 +93,7 @@ class ClientDHCP:
                 ) /
                 DHCP(options=[
                     ("message-type", MSG_TYPE_REQUEST),
-                    ("server_id", self.server_ip),
+                    ("server_id", self.dhcp_server_ip),
                     ("requested_addr", self.offered_addr), "end"]
                 )
         )
@@ -120,11 +125,24 @@ class ClientDHCP:
         )
         sendp(request_packet, verbose=False)
 
+    def calculate_lease_expire(self, start_time, lease):
+        # Convert string to datetime object
+        datetime_obj = datetime.strptime(start_time, '%d/%m/%Y %H:%M:%S')
+
+        # Add seconds to datetime object
+        new_datetime = datetime_obj + timedelta(seconds=lease)
+
+        # Convert datetime object to string
+        self.lease_expires = new_datetime.strftime('%d/%m/%Y %H:%M:%S')
+
     def set_ack(self, dhcp_ack):
         self.ip_add = dhcp_ack[BOOTP].yiaddr
         self.subnet_mask = dhcp_ack[DHCP].options[3][1]
         self.router = dhcp_ack[DHCP].options[4][1]
         self.dns_server_add = dhcp_ack[DHCP].options[5][1]
+        self.lease_obtain = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        self.lease = dhcp_ack[DHCP].options[2][1]
+        self.calculate_lease_expire(self.lease_obtain, self.lease)
         self.ack_set = True
 
     def decline(self):
@@ -140,7 +158,7 @@ class ClientDHCP:
                 ) /
                 DHCP(options=[
                     ("message-type", MSG_TYPE_DECLINE),
-                    ("server_id", self.server_ip), "end"]
+                    ("server_id", self.dhcp_server_ip), "end"]
                 )
         )
         sendp(decline_packet, verbose=False)
@@ -164,7 +182,7 @@ class ClientDHCP:
         pass
 
     def offer(self, offer_packet):
-        self.server_ip = offer_packet[IP].src
+        self.dhcp_server_ip = offer_packet[IP].src
         self.offered_addr = offer_packet[BOOTP].yiaddr
         self.got_offer=True
 
@@ -185,7 +203,7 @@ class ClientDHCP:
                 return
 
             # Match DHCP ack
-            elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_ACK and dhcp_packet[IP].src == self.server_ip:
+            elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_ACK and dhcp_packet[IP].src == self.dhcp_server_ip:
                 print('---')
                 print('New DHCP ACK')
                 self.got_offer = False
@@ -193,11 +211,11 @@ class ClientDHCP:
                 return
 
             # Match DHCP nak
-            elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_NAK and dhcp_packet[IP].src == self.server_ip:
+            elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_NAK and dhcp_packet[IP].src == self.dhcp_server_ip:
                 print('---')
                 print('New DHCP NAK')
                 self.got_nak = True
-                self.server_ip = None
+                self.dhcp_server_ip = None
                 self.offered_addr = None
                 self.got_offer = False
                 return
@@ -206,7 +224,7 @@ class ClientDHCP:
     def sniff_for_ack(self) -> None:
         try:
             print("in sniff")
-            packet = sniff(filter=f'udp and port {self.server_port} and host {self.server_ip}', count=1, timeout=20)
+            packet = sniff(filter=f'udp and port {self.server_port} and host {self.dhcp_server_ip}', count=1, timeout=20)
             thread = threading.Thread(target=self.handle_packet, args=packet)
             thread.start()
             thread.join()

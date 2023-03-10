@@ -8,7 +8,7 @@ from socket import *
 import threading
 
 
-DNS_IP = "10.0.01"
+DNS_IP = "10.0.0.1"
 
 DNS_Cache = {}
 
@@ -29,8 +29,8 @@ def dns_server(packet):
 
         if len(DNS_Cache) != 0 and hostname in DNS_Cache:
             print("found in cache")
-            ip_address = DNS_Cache[hostname].ip
-            hostname_ttl = DNS_Cache[hostname].ttl
+            ip_address = DNS_Cache[hostname]["ip"]
+            hostname_ttl = DNS_Cache[hostname]["ttl"]
 
         else:
             ip_address = gethostbyname(hostname)
@@ -44,6 +44,7 @@ def dns_server(packet):
                 DNS(id=packet[DNS].id, qd=packet[DNS].qd, aa=1, qr=1,
                     an=DNSRR(rrname=packet[DNSQR].qname, ttl=hostname_ttl, rdata=ip_address)))
 
+        print(packet[UDP].sport)
         send(resp_packet, verbose=False)
         print("sent answer")
 
