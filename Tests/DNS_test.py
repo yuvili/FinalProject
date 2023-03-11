@@ -3,12 +3,6 @@ import unittest
 from socket import socket
 from socket import *
 
-from scapy.layers.dns import DNSQR, DNS, DNSRR
-from scapy.layers.inet import IP, UDP
-from scapy.sendrecv import *
-from DNS_Docs import ServerDNS as dns_server
-
-
 def dns_query(hostname):
     # Construct the DNS query
     id = 1
@@ -75,6 +69,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(get_dns_response_type(response, query_packet), 1)
         self.assertEqual(get_dns_response_name(response, query_len), 'www.example.com')
         self.assertIn('93.184.216.34', get_dns_response_data(response, query_len, query_packet))
+        client_socket.close()
 
 
 if __name__ == '__main__':
