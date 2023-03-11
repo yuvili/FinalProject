@@ -1,0 +1,17 @@
+@startuml
+title DHCP Sequence Diagram
+
+actor User
+participant Client
+participant Server
+
+User -> Client : open Client
+
+note over Client, Server:DHCP Communication
+Client -> Server: DHCP DISCOVER
+Server -> Client : DHCP OFFER
+Client -> Server : DHCP REQUEST
+Server -> Client : DHCP ACK\NAK
+
+User -> Client : close Client
+@enduml

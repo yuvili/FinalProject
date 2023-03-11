@@ -1,7 +1,8 @@
 import threading
 from customtkinter import *
 import Operations
-from DHCP_Docs import dhcp_server
+from src.backend.DHCP_Docs import dhcp_server
+
 
 class MainGui:
 

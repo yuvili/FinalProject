@@ -6,7 +6,8 @@ from socket import *
 import threading
 import random
 
-from DHCP_Docs import dhcp_server
+from src.backend.DHCP_Docs import dhcp_server
+
 
 def build_dhcp_request_packet(server_id, offered_addr):
     op_code = 1

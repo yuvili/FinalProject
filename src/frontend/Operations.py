@@ -1,7 +1,7 @@
 import webbrowser
 
-from DHCP_Docs.dhcp_client import ClientDHCP
-from DNS_Docs.dns_client import ClientDNS
+from src.backend.DHCP_Docs.dhcp_client import ClientDHCP
+from src.backend.DNS_Docs.dns_client import ClientDNS
 from tkinter import *
 
 

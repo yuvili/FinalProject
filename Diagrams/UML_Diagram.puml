@@ -1,0 +1,101 @@
+@startuml
+class dhcp_server
+class dhcp_client
+class dns_server
+class dns_client
+class MainGui
+class Operations
+
+
+class dhcp_server{
+- SERVER_IP
+- DNS_SERVER_IP
+- ROUTER_IP
+- SERVER_PORT
+- CLIENT_PORT
+- SCOPE
+- LEASE
+- BROADCAST_IP
+- SUBNET_MASK
+- available_addresses
+- log_file
+
++ generate_ip_addresses()
++ offer()
++ ack()
++ nak()
++ release()
++ handle_dhcp_packet()
++ stop_server()
++ start_server()
+}
+
+class dhcp_client{
+- mac_address
+- ip_address
+- dns_server_address
+- lease_obtain
+- lease
+- lease_expires
+- subnet_mask
+- router
+- dhcp_server_ip
+- offered_addr
+- transaction_id
+- got_offer
+- got_nak
+- ack_set
+
++ discover()
++ set_offer()
++ request()
++ decline()
++ calculate_lease_expire()
++ set_ack()
++ release()
++ handle_packet()
+
+}
+
+class dns_server{
+- DNS_IP
+- DNS_Cache
++ handle_dns_query
++ start_server
+}
+
+class dns_client{
+- client_port
+- server_port
+- ip_add
+- dns_server_add
+- subnet_mask
+- router
+- ip_result
++ parse_dns_response
++ send_dns_query
+}
+
+class MainGui{
++ update_dns_button()
++ dhcp_client_request()
++ dhcp_client_decline()
++ dhcp_error_screen()
++ dhcp_generateIP_frame()
++ dhcp_client_release()
++ dhcp_screen()
++ dhcp_op()
++ get_ip()
++ dns_control_screen()
++ dns_screen()
++ client_info_details()
++ client_info_screen()
++ main_frame()
++ middle_frame()
++ opp_frame()
++ clear_screen()
+}
+
+dhcp_client <-- dhcp_server
+dns_client <--dns_server
+@enduml

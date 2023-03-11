@@ -10,7 +10,7 @@
   <component name="PyNamespacePackagesService">
     <option name="namespacePackageFolders">
       <list>
-        <option value="$MODULE_DIR$/DHCP_Docs" />
+        <option value="$MODULE_DIR$/src/backend/DHCP_Docs" />
       </list>
     </option>
   </component>
