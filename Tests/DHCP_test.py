@@ -6,7 +6,7 @@ from socket import *
 import threading
 import random
 
-from DHCP_Docs import server
+from DHCP_Docs import dhcp_server
 
 def build_dhcp_request_packet(server_id, offered_addr):
     op_code = 1
@@ -121,7 +121,7 @@ def client_discover(client_socket):
 class MyTestCase(unittest.TestCase):
 
     def test_dhcp_discover(self):
-        thread = threading.Thread(target=server.start_server)
+        thread = threading.Thread(target=dhcp_server.start_server)
         thread.start()
         # Send a DHCP discover packet
         client_socket = socket(AF_INET, SOCK_DGRAM)
@@ -134,7 +134,7 @@ class MyTestCase(unittest.TestCase):
         # Wait for a DHCP offer packet
         client_socket.settimeout(5.0)
         try:
-            server.stop_server()
+            dhcp_server.stop_server()
             offer_packet = client_socket.recv(2048)
         except socket.timeout:
             self.fail("Did not receive a DHCP offer packet")
@@ -151,7 +151,7 @@ class MyTestCase(unittest.TestCase):
         print("done test disover")
 
     def test_dhcp_request(self):
-        thread = threading.Thread(target=server.start_server)
+        thread = threading.Thread(target=dhcp_server.start_server)
         thread.start()
         # Send a DHCP request packet
         client_socket = socket(AF_INET, SOCK_DGRAM)
@@ -170,7 +170,7 @@ class MyTestCase(unittest.TestCase):
         # Wait for a DHCP ACK packet
         client_socket.settimeout(5.0)
         try:
-            server.stop_server()
+            dhcp_server.stop_server()
             ack_packet = client_socket.recv(2048)
         except socket.timeout:
             self.fail("Did not receive a DHCP ACK packet")

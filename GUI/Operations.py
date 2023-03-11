@@ -1,7 +1,7 @@
 import webbrowser
 
-from DHCP_Docs.clientDHCP import ClientDHCP
-from DNS_Docs.clientDNS import ClientDNS
+from DHCP_Docs.dhcp_client import ClientDHCP
+from DNS_Docs.dns_client import ClientDNS
 from tkinter import *
 
 
@@ -35,7 +35,6 @@ class Operator:
             if not self.dhcp_client.got_offer:
                 return "timeout error"
 
-            print("generated")
             return self.dhcp_client.offered_addr
         except Exception as e:
             print(f"Error: {e}")
@@ -50,7 +49,6 @@ class Operator:
                     return "error"
 
             if self.dhcp_client.ip_address != "0.0.0.0":
-                print("ack")
                 return "True"
         except RuntimeError:
             print("RuntimeError")

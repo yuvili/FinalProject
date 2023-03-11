@@ -1,14 +1,11 @@
+import binascii
 import random
-import threading
+import struct
+import socket
+from socket import *
 
 from getmac import get_mac_address as gma
-from scapy.layers.l2 import Ether
-from scapy.layers.inet import IP, UDP
-from scapy.layers.dhcp import BOOTP, DHCP
-from scapy.sendrecv import sendp, sniff
-from scapy.utils import mac2str
 from datetime import datetime, timedelta
-
 
 # DHCP message types
 MSG_TYPE_DISCOVER = 1
@@ -29,15 +26,13 @@ class ClientDHCP:
 
     def __init__(self):
         self.mac_address = gma()  # Extracting the mac address of this computer
-        self.ip_add = "0.0.0.0"  # Client's IP address
-        self.dns_server_add = ""  # DNS server IP address
-        self.lease_obtain = None
+        self.ip_address = "0.0.0.0"  # Client's Default IP Address
+        self.dns_server_address = ""  # DNS Server IP Address
+        self.lease_obtain = None  # Time of obtaining IP address
         self.lease = None
         self.lease_expires= None
         self.subnet_mask = None
         self.router = None
-        self.client_port = 68
-        self.server_port = 67
 
         self.dhcp_server_ip= None
         self.offered_addr= None
@@ -46,84 +41,172 @@ class ClientDHCP:
         self.got_nak = False
         self.ack_set = False
 
-
     def discover(self):
         """
-        Broadcast by a DHCP client to locate a DHCP server when the client attempts to
-        connect to a network for the first time.
+        Broadcast by a DHCP client to locate a DHCP server when the client attempts to claim an IP address.
         """
-        # Build DHCP discover packet
-        print("in discover")
         self.transaction_id = random.randint(1, 2 ** 32 - 1)
-        packet = (
-                Ether(dst="ff:ff:ff:ff:ff:ff", type=0x0800) /
-                IP(src="0.0.0.0", dst="255.255.255.255") /
-                UDP(sport=68, dport=67) /
-                BOOTP(
-                    op=OP_REQUEST,
-                    chaddr=mac2str(self.mac_address),
-                    xid=self.transaction_id,
-                ) /
-                DHCP(options=[("message-type", MSG_TYPE_DISCOVER), "end"])
-        )
 
-        thread_ack = threading.Thread(target=self.start_sniff)
-        thread_ack.start()
-        sendp(packet, verbose=False)
-        thread_ack.join()
+        # Build DHCP discover packet
+        op_code = OP_REQUEST
+        htype = 1  #Ethernet
+        hlen = 6 #Address length
+        hops = 0
+        xid = self.transaction_id
+        secs = 0
+        flags = 0x0000
+        ciaddr = inet_pton(AF_INET, self.ip_address)
+        yiaddr = inet_pton(AF_INET, self.ip_address)
+        siaddr = inet_pton(AF_INET, self.ip_address)
+        giaddr = inet_pton(AF_INET, self.ip_address)
+        chaddr = binascii.unhexlify(self.mac_address.replace(':', ''))
+        padding = b'\x00' * 10  # padding (unused)
+        sname = b'\x00' * 64  # srchostname
+        file = b'\x00' * 128  # bootfilename
+        magic_cookie = b'\x63\x82\x53\x63'  # magic cookie: DHCP option 99, 130, 83, 99
+
+        discover_header = struct.pack('! B B B B I H H', op_code, htype, hlen, hops, xid, secs, flags) + \
+                          ciaddr + yiaddr + siaddr + giaddr + chaddr + padding + sname + file + magic_cookie
+
+        msg_type = b'\x35\x01\x01' # DHCP message type: 1 = DHCP DISCOVER
+        client_id = b'\x3d\x06' + chaddr  # DHCP client identifier: 6 bytes for MAC address
+        request_list = b'\x37\x03\x03\x01\x06'  # DHCP parameter request list: requested options are subnet mask, router, DNS server
+        end = b'\xff' # end of options marker
+        dhcp_options = msg_type + client_id + request_list + end
+
+        # Create a socket object using UDP and bind it to DHCP client port
+        client_socket = socket(AF_INET, SOCK_DGRAM)
+        client_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        client_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+        client_socket.bind(('0.0.0.0', 68))
+
+        # Build the full packet
+        packet = discover_header + dhcp_options
+
+        # Send the packet to the broadcast address on UDP port 68 (DHCP client port)
+        server_address = ("255.255.255.255", 67)
+        client_socket.sendto(packet, server_address)
+
+        # Receive DHCP OFFER packet from server
+        offer_packet = client_socket.recv(2048)
+        client_socket.close()
+
+        self.handle_packet(offer_packet)
+
+    def set_offer(self, offer_packet):
+        """
+        Extract the DHCP OFFER details that were sent from the server.
+        :param offer_packet: DHCP server DHCP OFFER packet
+        :return:
+        """
+        op_code, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr = struct.unpack(
+            '! B B B B I H H 4s4s4s4s6s', offer_packet[0:34])
+
+        server_id = struct.unpack("! 4s", offer_packet[245: 249])[0]
+        self.dhcp_server_ip = inet_ntoa(server_id)
+        self.offered_addr = inet_ntoa(yiaddr)
+        self.got_offer=True
 
     def request(self):
         """
-        A DHCP Request message is sent in the following scenarios:
-        1. After a DHCP client starts, it broadcasts a DHCP Request message to respond to the DHCP Offer message sent by a DHCP server.
-        2. After a DHCP client restarts, it broadcasts a DHCP Request message to confirm the configuration including the allocated IP address.
-        3. After a DHCP client obtains an IP address, it unicasts or broadcasts a DHCP Request message to renew the IP address lease.
-        :param:
+        A DHCP Request message broadcasts a message to respond to the DHCP Offer message sent by a DHCP server,
+        or in cases when a client wish to renew the IP address lease.
         """
 
-        request_packet = (
-                Ether(dst="ff:ff:ff:ff:ff:ff") /
-                IP(src="0.0.0.0", dst="255.255.255.255") /
-                UDP(sport=68, dport=67) /
-                BOOTP(
-                    op=OP_REQUEST,
-                    siaddr=self.ip_add,
-                    chaddr=mac2str(self.mac_address),
-                    xid=self.transaction_id
-                ) /
-                DHCP(options=[
-                    ("message-type", MSG_TYPE_REQUEST),
-                    ("server_id", self.dhcp_server_ip),
-                    ("requested_addr", self.offered_addr), "end"]
-                )
-        )
-        thread_ack = threading.Thread(target=self.sniff_for_ack)
-        thread_ack.start()
-        sendp(request_packet, verbose=False)
-        thread_ack.join()
+        op_code = OP_REQUEST
+        htype = 1  # Ethernet
+        hlen = 6  # Address length
+        hops = 0
+        xid = self.transaction_id
+        secs = 0
+        flags = 0x0000
+        ciaddr = inet_pton(AF_INET, self.ip_address)
+        yiaddr = inet_pton(AF_INET, self.ip_address)
+        siaddr = inet_pton(AF_INET, self.ip_address)
+        giaddr = inet_pton(AF_INET, self.ip_address)
+        chaddr = binascii.unhexlify(self.mac_address.replace(':', ''))
+        padding = b'\x00' * 10  # padding (unused)
+        sname = b'\x00' * 64  # srchostname
+        file = b'\x00' * 128  # bootfilename
+        magic_cookie = b'\x63\x82\x53\x63'  # magic cookie: DHCP option 99, 130, 83, 99
 
-    def renew_request(self):
-        # After a DHCP client obtains an IP address, it unicasts or broadcasts a DHCP Request message to renew the IP address lease.
-        if self.ip_add == "0.0.0.0":
-            return
+        request_header = struct.pack('! B B B B I H H', op_code, htype, hlen, hops, xid, secs, flags) + \
+                          ciaddr + yiaddr + siaddr + giaddr + chaddr + \
+                          padding + sname + file + magic_cookie
 
-        request_packet = (
-                Ether(dst="ff:ff:ff:ff:ff:ff") /
-                IP(src="0.0.0.0", dst="255.255.255.255") /
-                UDP(sport=68, dport=67) /
-                BOOTP(
-                    op=OP_REQUEST,
-                    siaddr=self.ip_add,
-                    chaddr=mac2str(self.mac_address),
-                    xid=random.randint(1, 2 ** 32 - 1)
-                ) /
-                DHCP(options=[
-                    ("message-type", MSG_TYPE_REQUEST),
-                    ("server_id", self.router),
-                    ("requested_addr", self.ip_add), "end"]
-                )
-        )
-        sendp(request_packet, verbose=False)
+        msg_type = b'\x35\x01\x03'  # DHCP message type: 3 = DHCP Request
+        server_id = b'\x36\x04' + inet_pton(AF_INET, self.dhcp_server_ip)
+        request_addr = b'\x32\x04' + inet_pton(AF_INET, self.offered_addr)
+        end = b'\xff'  # end of options marker
+        dhcp_options = msg_type + server_id + request_addr + end
+
+        # Create a socket object using UDP and bind it to DHCP client port
+        client_socket = socket(AF_INET, SOCK_DGRAM)
+        client_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        client_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+        client_socket.bind(('0.0.0.0', 68))
+
+        # Build the full packet
+        packet = request_header + dhcp_options
+
+        # Send the packet to the broadcast address on UDP port 68 (DHCP client port)
+        client_socket.sendto(packet, ("255.255.255.255", 67))
+        # Receive DHCP OFFER packet from server
+        ack_packet = client_socket.recv(2048)
+
+        client_socket.close()
+        self.handle_packet(ack_packet)
+
+    def decline(self):
+        """
+        A DHCP Decline message broadcasts a message to respond to the DHCP Offer message sent by a DHCP server,
+        in cases the client don't approve of the offered IP address.
+        """
+        op_code = OP_REQUEST
+        htype = 1  # Ethernet
+        hlen = 6  # Address length
+        hops = 0
+        xid = self.transaction_id
+        secs = 0
+        flags = 0x0000
+        ciaddr = inet_pton(AF_INET, self.ip_address)
+        yiaddr = inet_pton(AF_INET, self.ip_address)
+        siaddr = inet_pton(AF_INET, self.ip_address)
+        giaddr = inet_pton(AF_INET, self.ip_address)
+        chaddr = binascii.unhexlify(self.mac_address.replace(':', ''))
+        padding = b'\x00' * 10  # padding (unused)
+        sname = b'\x00' * 64  # srchostname
+        file = b'\x00' * 128  # bootfilename
+        magic_cookie = b'\x63\x82\x53\x63'  # magic cookie: DHCP option 99, 130, 83, 99
+
+        decline_header = struct.pack('! B B B B I H H', op_code, htype, hlen, hops, xid, secs, flags) + \
+                         ciaddr + yiaddr + siaddr + giaddr + chaddr + \
+                         padding + sname + file + magic_cookie
+
+        msg_type = b'\x35\x01\x04'  # DHCP message type: 4 = DHCP Decline
+        server_id = b'\x36\x04' + inet_pton(AF_INET, self.dhcp_server_ip)
+        end = b'\xff'  # end of options marker
+        dhcp_options = msg_type + server_id + end
+
+        # Create a socket object using UDP and bind it to DHCP client port
+        client_socket = socket(AF_INET, SOCK_DGRAM)
+        client_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        client_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+        client_socket.bind(('0.0.0.0', 68))
+
+        # Build the full packet
+        packet = decline_header + dhcp_options
+
+        # Send the packet to the broadcast address on UDP port 68 (DHCP client port)
+        client_socket.sendto(packet, ("255.255.255.255", 67))
+        client_socket.close()
+
+        self.dhcp_server_ip = None
+        self.offered_addr = None
+        self.transaction_id = None
+        self.got_offer = False
+        self.got_nak = False
+        self.ack_set = False
 
     def calculate_lease_expire(self, start_time, lease):
         # Convert string to datetime object
@@ -135,118 +218,119 @@ class ClientDHCP:
         # Convert datetime object to string
         self.lease_expires = new_datetime.strftime('%d/%m/%Y %H:%M:%S')
 
-    def set_ack(self, dhcp_ack):
-        self.ip_add = dhcp_ack[BOOTP].yiaddr
-        self.subnet_mask = dhcp_ack[DHCP].options[3][1]
-        self.router = dhcp_ack[DHCP].options[4][1]
-        self.dns_server_add = dhcp_ack[DHCP].options[5][1]
+    def set_ack(self, ack_packet):
+        """
+        When receiving a DHCP ACK message, this function is used to extract the details and initilaze them to
+        the client.
+        :param ack_packet: the received DHCP ACK packet
+        """
+        op_code, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr = struct.unpack(
+            '! B B B B I H H 4s4s4s4s6s', ack_packet[0:34])
+
+        server_id = struct.unpack("! 4s", ack_packet[245: 249])[0]
+        lease_time = struct.unpack("! I", ack_packet[251: 255])[0]
+        renew_val_time = struct.unpack("! I", ack_packet[257: 261])[0]
+        rebinding_time = struct.unpack("! I", ack_packet[262: 266])[0]
+        subnet_mask = struct.unpack("! 4s", ack_packet[269: 273])[0]
+        broadcast_address = struct.unpack("! 4s", ack_packet[275: 279])[0]
+        router = struct.unpack("! 4s", ack_packet[281: 285])[0]
+        dns_server = struct.unpack("! 4s", ack_packet[287: 291])[0]
+
+        self.ip_address = inet_ntoa(yiaddr)
+        self.subnet_mask = inet_ntoa(subnet_mask)
+        self.router = inet_ntoa(router)
+        self.dns_server_address = inet_ntoa(dns_server)
         self.lease_obtain = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        self.lease = dhcp_ack[DHCP].options[2][1]
+        self.lease = lease_time
         self.calculate_lease_expire(self.lease_obtain, self.lease)
         self.ack_set = True
 
-    def decline(self):
-        decline_packet = (
-                Ether(dst="ff:ff:ff:ff:ff:ff") /
-                IP(src="0.0.0.0", dst="255.255.255.255") /
-                UDP(sport=68, dport=67) /
-                BOOTP(
-                    op=OP_REQUEST,
-                    siaddr=self.ip_add,
-                    chaddr=mac2str(self.mac_address),
-                    xid=self.transaction_id
-                ) /
-                DHCP(options=[
-                    ("message-type", MSG_TYPE_DECLINE),
-                    ("server_id", self.dhcp_server_ip), "end"]
-                )
-        )
-        sendp(decline_packet, verbose=False)
+        self.transaction_id = None
+        self.got_offer = False
+        self.got_nak = False
 
     def release(self):
-        packet = (
-                Ether(dst="ff:ff:ff:ff:ff:ff", type=0x0800) /
-                IP(src=self.ip_add, dst=self.router) /
-                UDP(sport=68, dport=67) /
-                BOOTP(
-                    op=OP_REQUEST,
-                    chaddr=mac2str(self.mac_address),
-                    xid=random.randint(1, 2 ** 32 - 1),
-                ) /
-                DHCP(options=[("message-type", MSG_TYPE_RELEASE), "end"])
-        )
-        self.ip_add = "0.0.0.0"
-        sendp(packet, verbose=False)
+        self.transaction_id = random.randint(1, 2 ** 32 - 1)
+        op_code = OP_REQUEST
+        htype = 1  # Ethernet
+        hlen = 6  # Address length
+        hops = 0
+        xid = self.transaction_id
+        secs = 0
+        flags = 0x0000
+        ciaddr = inet_pton(AF_INET, self.ip_address)
+        yiaddr = inet_pton(AF_INET, self.ip_address)
+        siaddr = inet_pton(AF_INET, self.ip_address)
+        giaddr = inet_pton(AF_INET, self.ip_address)
+        chaddr = binascii.unhexlify(self.mac_address.replace(':', ''))
+        padding = b'\x00' * 10  # padding (unused)
+        sname = b'\x00' * 64  # srchostname
+        file = b'\x00' * 128  # bootfilename
+        magic_cookie = b'\x63\x82\x53\x63'  # magic cookie: DHCP
 
-    def inform(self, dns_addr: str = None, gateway: str = None):
-        pass
+        decline_header = struct.pack('! B B B B I H H', op_code, htype, hlen, hops, xid, secs, flags) + \
+                         ciaddr + yiaddr + siaddr + giaddr + chaddr + padding + sname + file + magic_cookie
 
-    def offer(self, offer_packet):
-        self.dhcp_server_ip = offer_packet[IP].src
-        self.offered_addr = offer_packet[BOOTP].yiaddr
-        self.got_offer=True
+        msg_type = b'\x35\x01\x07'  # DHCP message type: 7 = DHCP Release
+        end = b'\xff'  # end of options marker
+        dhcp_options = msg_type + end
 
-    def handle_packet(self, dhcp_packet=None):
-        print("after sniff")
-        if dhcp_packet is None:
-            print("no package")
-            return
+        # Create a socket object using UDP and bind it to DHCP client port
+        client_socket = socket(AF_INET, SOCK_DGRAM)
+        client_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        client_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+        client_socket.bind(('0.0.0.0', 68))
 
-        if DHCP in dhcp_packet:
-            dhcp_packet.show()
+        # Build the full packet
+        packet = decline_header + dhcp_options
 
-            # Match DHCP offer
-            if dhcp_packet[DHCP].options[0][1] == MSG_TYPE_OFFER:
-                print('---')
-                print('New DHCP Offer')
-                self.offer(dhcp_packet)
-                return
+        # Send the packet to the broadcast address on UDP port 68 (DHCP client port)
+        client_socket.sendto(packet, ("255.255.255.255", 67))
+        client_socket.close()
 
-            # Match DHCP ack
-            elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_ACK and dhcp_packet[IP].src == self.dhcp_server_ip:
-                print('---')
-                print('New DHCP ACK')
-                self.got_offer = False
+        self.ip_address = "0.0.0.0"
+        self.dns_server_address = ""  # DNS server IP address
+        self.lease_obtain = None
+        self.lease = None
+        self.lease_expires = None
+        self.subnet_mask = None
+        self.router = None
+        self.dhcp_server_ip = None
+        self.offered_addr = None
+        self.transaction_id = None
+        self.got_offer = False
+        self.got_nak = False
+        self.ack_set = False
+
+    def handle_packet(self, dhcp_packet):
+        if dhcp_packet[0:2] == b'\x02\x01':
+            if dhcp_packet[240:243] == b'5\x01\x02':
+                print("---------------------")
+                print("Client received a DHCP OFFER packet")
+                self.set_offer(dhcp_packet)
+
+            elif dhcp_packet[240:243] == b'5\x01\x05':
+                print("---------------------")
+                print("Client received a DHCP ACK packet")
                 self.set_ack(dhcp_packet)
-                return
 
-            # Match DHCP nak
-            elif dhcp_packet[DHCP].options[0][1] == MSG_TYPE_NAK and dhcp_packet[IP].src == self.dhcp_server_ip:
-                print('---')
-                print('New DHCP NAK')
-                self.got_nak = True
-                self.dhcp_server_ip = None
-                self.offered_addr = None
-                self.got_offer = False
-                return
-        return
-
-    def sniff_for_ack(self) -> None:
-        try:
-            print("in sniff")
-            packet = sniff(filter=f'udp and port {self.server_port} and host {self.dhcp_server_ip}', count=1, timeout=20)
-            thread = threading.Thread(target=self.handle_packet, args=packet)
-            thread.start()
-            thread.join()
-        except KeyboardInterrupt:
-            print("Shutting down...")
-
-        except Exception as e:
-            print(f"Unexpected error: {str(e)}")
-    def start_sniff(self) -> None:
-        try:
-            print("in sniff")
-            packet = sniff(filter=f'udp and port {self.server_port}', count=1, timeout=20)
-            thread = threading.Thread(target=self.handle_packet, args=packet)
-            thread.start()
-            thread.join()
-        except KeyboardInterrupt:
-            print("Shutting down...")
-
-        except Exception as e:
-            print(f"Unexpected error: {str(e)}")
-
+            elif dhcp_packet[240:243] == b'5\x01\x06':
+                print("---------------------")
+                print("Client received a DHCP NAK packet")
+                client_socket = socket(AF_INET, SOCK_DGRAM)
+                client_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+                client_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+                client_socket.bind(('0.0.0.0', 68))
+                try:
+                    ack_packet = client_socket.recv(2048)
+                    client_socket.close()
+                    print(ack_packet)
+                    if ack_packet[0:2] == b'\x02\x01':
+                        if ack_packet[240:243] == b'5\x01\x05':
+                            self.set_ack(dhcp_packet)
+                except Exception as e:
+                    self.got_nak = True
 
 if __name__ == '__main__':
     client = ClientDHCP()
-    client.start_sniff()
+    client.discover()
