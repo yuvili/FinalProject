@@ -198,7 +198,6 @@ def handle_dhcp_packet(dhcp_packet):
         print(dhcp_packet.summary())
 
 
-
 def start_server() -> None:
     threads = []
     generate_ip_addresses()  # Creating the database of all the available IP address

@@ -1,5 +1,4 @@
-import threading
-from time import sleep
+import webbrowser
 
 from DHCP_Docs.clientDHCP import ClientDHCP
 from DNS_Docs.clientDNS import ClientDNS
@@ -63,6 +62,11 @@ class Operator:
         self.set_dns_client()
         self.dns_client.send_dns_query(hostname, 'A')
         return self.dns_client.ip_result
+
+    def get_image(self):
+        # http_tcp_client.start_client()
+        print("done html")
+        webbrowser.open_new('new_html.html')
 
 
 

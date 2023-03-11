@@ -17,7 +17,6 @@ class ClientDNS():
         self.router = None
         self.ip_result = ""
 
-
     def parse_dns_response(self, dns_response, query_data, query_len):
         # Parse the DNS response
         id, flags, qdcount, ancount, nscount, arcount = struct.unpack_from('! H H H H H H', dns_response)

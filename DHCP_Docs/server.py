@@ -32,7 +32,7 @@ BROADCAST_IP = "255.255.255.255"
 SUBNET_MASK = "255.255.255.0"
 available_addresses = []
 log_file = {}
-
+stop = []
 
 def generate_ip_addresses():
     # Generate a random IP address in the range 10.0.0.2 to 10.0.0.254
@@ -94,8 +94,6 @@ def offer(packet):
     broadcast_address = ("255.255.255.255", 68)
     server_socket.sendto(packet, broadcast_address)
     server_socket.close()
-    start_server()
-    print("done offer")
 
 def ack(request_packet):
     server_id = struct.unpack("! 4s", request_packet[245: 249])[0]
@@ -239,10 +237,15 @@ def handle_dhcp_packet(dhcp_packet):
         if dhcp_packet[240:243] == b'5\x01\x07':
             release(dhcp_packet)
 
+def stop_server():
+    stop.append(True)
 
 def start_server() -> None:
     generate_ip_addresses()  # Creating the database of all the available IP address
     while True:
+        if len(stop) != 0 and stop[0]:
+            print("Shutting down...")
+            break
         try:
             sniffer_socket = socket(AF_INET, SOCK_DGRAM)
             sniffer_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -258,6 +261,8 @@ def start_server() -> None:
         except KeyboardInterrupt:
             print("Shutting down...")
             break
+    stop.clear()
+
 
 
 if __name__ == '__main__':

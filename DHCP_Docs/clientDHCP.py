@@ -1,7 +1,6 @@
 import binascii
 import random
 import struct
-import threading
 import socket
 from socket import *
 
@@ -86,7 +85,6 @@ class ClientDHCP:
         msg_type = b'\x35\x01\x01' # DHCP message type: 1 = DHCP DISCOVER
         client_id = b'\x3d\x06' + mac_address_bytes  # DHCP client identifier: 6 bytes for MAC address
         request_list = b'\x37\x03\x03\x01\x06'  # DHCP parameter request list: requested options are subnet mask, router, DNS server
-
         end = b'\xff' # end of options marker
         dhcp_options = msg_type + client_id + request_list + end
 
@@ -333,7 +331,63 @@ class ClientDHCP:
         self.ack_set = False
 
     def inform(self, dns_addr: str = None, gateway: str = None):
-        pass
+        print("in discover")
+        self.transaction_id = random.randint(1, 2 ** 32 - 1)
+        server_address = ("255.255.255.255", self.server_port)
+
+        op_code = OP_REQUEST
+        htype = 1  # Ethernet
+        hlen = 6  # Address length
+        hops = 0
+        xid = self.transaction_id
+        secs = 0
+        flags = 0x0000
+        ciaddr = self.ip_address
+        yiaddr = self.ip_address
+        siaddr = self.ip_address
+        giaddr = self.ip_address
+        chaddr = self.mac_address
+        padding = b'\x00' * 10  # padding (unused)
+        sname = b'\x00' * 64  # srchostname
+        file = b'\x00' * 128  # bootfilename
+        magic_cookie = b'\x63\x82\x53\x63'  # magic cookie: DHCP option 99, 130, 83, 99
+
+        mac_address_bytes = binascii.unhexlify(chaddr.replace(':', ''))
+        discover_header = struct.pack('! B B B B I H H', op_code, htype, hlen, hops, xid, secs, flags) + \
+                          inet_pton(AF_INET, ciaddr) + inet_pton(AF_INET, yiaddr) + inet_pton(AF_INET, siaddr) + \
+                          inet_pton(AF_INET, giaddr) + mac_address_bytes + \
+                          padding + sname + file + magic_cookie
+
+        msg_type = b'\x35\x01\x01'  # DHCP message type: 1 = DHCP DISCOVER
+        client_id = b'\x3d\x06' + mac_address_bytes  # DHCP client identifier: 6 bytes for MAC address
+        request_list = b'\x37\x03\x03\x01\x06'  # DHCP parameter request list: requested options are subnet mask, router, DNS server
+
+        end = b'\xff'  # end of options marker
+        dhcp_options = msg_type + client_id + request_list + end
+
+        # Create a socket object using UDP and bind it to a local port
+        client_socket = socket(AF_INET, SOCK_DGRAM)
+        client_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        client_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+        client_socket.bind(('0.0.0.0', 68))
+
+        # Build the full packet
+        packet = discover_header + dhcp_options
+        # Send the packet to the broadcast address on UDP port 67 (DHCP server port)
+
+        client_socket.sendto(packet, server_address)
+        offer_packet = client_socket.recv(2048)
+        print(offer_packet)
+        # sniff(filter=f'udp and port {self.server_port}', count=1, prn=self.handle_packet, timeout=20)
+        #
+        # client_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 0)
+        # client_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        # client_socket.setsockopt(SOL_SOCKET, SO_REUSEPORT, 1)
+        client_socket.close()
+
+        # Sniff DHCP Discover packets and call the callback function
+        # packet = sniff(filter=f'udp and port {self.server_port}', count=1, timeout=20)[0]
+        self.handle_packet(offer_packet)
 
     def offer(self, offer_packet):
         op_code, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr = struct.unpack(

@@ -1,9 +1,9 @@
 import threading
+
 from customtkinter import *
 # from DHCP_Docs import dhcp_server
+import Operations
 from DHCP_Docs import server
-from DNS_Docs import dns_server, ServerDNS
-from GUI import Operations
 
 
 class MainGui:
@@ -203,6 +203,32 @@ class MainGui:
 
         self.dns_control_screen()
 
+    def html_actions(self):
+        self.clear_screen(self.op_frame)
+
+        dhcp_actions = CTkLabel(self.op_frame, text="DHCP Actions", font=CTkFont(size=15, weight="bold"))
+        dhcp_actions.grid(row=0, column=0, padx=20, pady=(60, 10))
+
+        generate_button = CTkButton(self.op_frame, text="Get Image", command=self.operator.get_image)
+        generate_button.grid(row=1, column=0, padx=(60, 60), pady=10)
+
+    def html_screen(self):
+        self.clear_screen(self.mid_frame)
+
+        dhcp_textbox = CTkTextbox(self.mid_frame, width=250, height=380)
+        dhcp_textbox.grid(row=0, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
+
+        dhcp_info_text = 'DHCP\n\nIn this page you will have an option to \ngenerate yourself an IP ' \
+                         'address, in \ncase you don`t have on, or release \nyour current IP address. ' \
+                         '\nBy default, when starting the program your IP address is "0.0.0.0", so please start' \
+                         ' with generating an address.\n\n' \
+                         'The "Generate IP Address" option is \navailable only in case when your IP \nis "0.0.0.0".' \
+                         '\nIn case when you have a different IP \naddress and you wish to replace it, \nplease release your IP with "Release \nIP"' \
+                         ' action first.'
+        dhcp_textbox.insert("0.0", dhcp_info_text)
+
+        self.html_actions()
+
     def client_info_details(self):
         self.clear_screen(self.op_frame)
 
@@ -259,7 +285,7 @@ class MainGui:
         if self.operator.dhcp_client.ip_address == "0.0.0.0":
             dns_button.configure(state="disabled")
 
-        http_button = CTkButton(self.main_menu_frame, text="HTTP Application", command=self.dns_screen)
+        http_button = CTkButton(self.main_menu_frame, text="HTTP Application", command=self.html_screen)
         http_button.grid(row=3, column=0, padx=20, pady=10)
 
         CTkLabel(self.main_menu_frame, text='').grid(row=4, column=0, padx=20, pady=10)
@@ -287,6 +313,7 @@ class MainGui:
 
 if __name__ == '__main__':
     threading.Thread(target=server.start_server).start()
-    # threading.Thread(target=ServerDNS.start_server).start()
+    # threading.Thread(target=http_tcp_server.start_server).start()
+    # threading.Thread(target=http_tcp_image_server.start_server).start()
 
     gui = MainGui()
