@@ -166,29 +166,6 @@ class ClientDHCP:
         client_socket.close()
         self.handle_packet(ack_packet)
 
-    def renew_request(self):
-        # After a DHCP client obtains an IP address, it unicasts or broadcasts a DHCP Request message to renew the IP address lease.
-        if self.ip_address == "0.0.0.0":
-            return
-
-        request_packet = (
-                Ether(dst="ff:ff:ff:ff:ff:ff") /
-                IP(src="0.0.0.0", dst="255.255.255.255") /
-                UDP(sport=68, dport=67) /
-                BOOTP(
-                    op=OP_REQUEST,
-                    siaddr=self.ip_address,
-                    chaddr=mac2str(self.mac_address),
-                    xid=random.randint(1, 2 ** 32 - 1)
-                ) /
-                DHCP(options=[
-                    ("message-type", MSG_TYPE_REQUEST),
-                    ("server_id", self.router),
-                    ("requested_addr", self.ip_address), "end"]
-                )
-        )
-        sendp(request_packet, verbose=False)
-
     def calculate_lease_expire(self, start_time, lease):
         # Convert string to datetime object
         datetime_obj = datetime.strptime(start_time, '%d/%m/%Y %H:%M:%S')

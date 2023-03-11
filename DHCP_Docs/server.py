@@ -214,7 +214,6 @@ def nak(request_packet):
     server_socket.close()
     print("done nak")
 
-
 def release(release_packet):
     op_code, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr = struct.unpack(
         '! B B B B I H H 4s4s4s4s6s', release_packet[0:34])

@@ -25,6 +25,7 @@ class ClientDNS():
         answer_start = 12 + query_len  # Start of answer section
         answer_name, answer_type, answer_class, answer_ttl, answer_rdlen = struct.unpack('! H H H I H', dns_response[
                                                                                                         answer_start: answer_start + 12])
+
         answer_data = dns_response[answer_start + 12: answer_start + 12 + answer_rdlen]
         if response_type == DNS_QUERY_TYPES['A']:
             response_address = inet_ntoa(answer_data)
@@ -32,7 +33,6 @@ class ClientDNS():
             response_address = socket.inet_ntop(AF_INET6, struct.unpack_from('! 16s', dns_response, len(query_data) + 10)[0])
 
         self.ip_result = response_address
-        print(response_address)
 
     def send_dns_query(self, hostname, query_type):
         server_address = (self.dns_server_add, self.server_port)
