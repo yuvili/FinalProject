@@ -8,7 +8,6 @@ from tkinter import *
 class Operator:
 
     def __init__(self):
-        # self.dhcp_client = ClientDHCP()
         self.dhcp_client = ClientDHCP()
         self.dns_client = ClientDNS()
         self.window = None
