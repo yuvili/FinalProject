@@ -95,17 +95,22 @@ def offer(packet):
     start_server()
     print("done offer")
 
-def ack(packet):
+def ack(request_packet):
+    server_id = struct.unpack("! 4s", request_packet[245: 249])[0]
+    if inet_ntoa(server_id) != SERVER_IP:
+        nak(request_packet)
+        return
+
     op_code, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr = struct.unpack(
-        '! B B B B I H H 4s4s4s4s6s', packet[0:28 + 6])
+        '! B B B B I H H 4s4s4s4s6s', request_packet[0:28 + 6])
 
     mac_string = binascii.hexlify(chaddr).decode('utf-8')
     client_mac_add = ':'.join(mac_string[i:i + 2] for i in range(0, len(mac_string), 2))
-    chosen_ip = inet_ntoa(struct.unpack('! 4s', packet[-5:-1])[0])
+    chosen_ip = inet_ntoa(struct.unpack('! 4s', request_packet[-5:-1])[0])
 
     if chosen_ip not in available_addresses:
         print("chosen address not available")
-        nak(packet)
+        nak(request_packet)
         return
 
     info = {
@@ -163,7 +168,6 @@ def ack(packet):
     server_socket.sendto(packet, broadcast_address)
     server_socket.close()
 
-
 def nak(request_packet):
     print("start nak")
 
@@ -213,12 +217,13 @@ def nak(request_packet):
 
 def release(release_packet):
     op_code, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr = struct.unpack(
-        '! B B B B I H H 4s4s4s4s6s', release_packet[0:28 + 6])
+        '! B B B B I H H 4s4s4s4s6s', release_packet[0:34])
     client_ip = inet_ntoa(ciaddr)
     if client_ip != "0.0.0.0":
+        print(log_file)
+        print(client_ip)
         log_file.pop(client_ip)
         available_addresses.append(client_ip)
-
 
 def handle_dhcp_packet(dhcp_packet):
     if dhcp_packet[0:2] == b'\x01\x01':

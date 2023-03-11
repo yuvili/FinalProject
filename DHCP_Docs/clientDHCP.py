@@ -33,9 +33,9 @@ class ClientDHCP:
 
     def __init__(self):
         self.mac_address = gma()  # Extracting the mac address of this computer
-        self.ip_address = "0.0.0.0"  # Client's IP address
-        self.dns_server_address = ""  # DNS server IP address
-        self.lease_obtain = None
+        self.ip_address = "0.0.0.0"  # Client's Default IP Address
+        self.dns_server_address = ""  # DNS Server IP Address
+        self.lease_obtain = None  # Time of obtaining IP address
         self.lease = None
         self.lease_expires= None
         self.subnet_mask = None
@@ -49,7 +49,6 @@ class ClientDHCP:
         self.got_offer = False
         self.got_nak = False
         self.ack_set = False
-
 
     def discover(self):
         """
@@ -115,7 +114,6 @@ class ClientDHCP:
         # packet = sniff(filter=f'udp and port {self.server_port}', count=1, timeout=20)[0]
         self.handle_packet(offer_packet)
 
-
     def request(self):
         """
         A DHCP Request message is sent in the following scenarios:
@@ -170,9 +168,6 @@ class ClientDHCP:
         client_socket.close()
         self.handle_packet(ack_packet)
 
-    def sniff(self):
-        sniff(filter=f'udp and port {self.server_port} and host {self.dhcp_server_ip}', count=1, prn=self.handle_packet, timeout=20)
-
     def renew_request(self):
         # After a DHCP client obtains an IP address, it unicasts or broadcasts a DHCP Request message to renew the IP address lease.
         if self.ip_address == "0.0.0.0":
@@ -210,10 +205,16 @@ class ClientDHCP:
         op_code, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr = struct.unpack(
             '! B B B B I H H 4s4s4s4s6s', ack_packet[0:34])
 
-        server_id, lease_time, renew_val_time, rebinding_time, subnet_mask, broadcast_address, router, \
-            dns_server = struct.unpack("! 4s I I I 4s 4s 4s 4s", ack_packet[243: 275])
+        server_id = struct.unpack("! 4s", ack_packet[245: 249])[0]
+        lease_time = struct.unpack("! I", ack_packet[251: 255])[0]
+        renew_val_time = struct.unpack("! I", ack_packet[257: 261])[0]
+        rebinding_time = struct.unpack("! I", ack_packet[262: 266])[0]
+        subnet_mask = struct.unpack("! 4s", ack_packet[269: 273])[0]
+        broadcast_address = struct.unpack("! 4s", ack_packet[275: 279])[0]
+        router = struct.unpack("! 4s", ack_packet[281: 285])[0]
+        dns_server = struct.unpack("! 4s", ack_packet[287: 291])[0]
 
-        self.ip_address = inet_ntoa(server_id)
+        self.ip_address = inet_ntoa(yiaddr)
         self.subnet_mask = inet_ntoa(subnet_mask)
         self.router = inet_ntoa(router)
         self.dns_server_address = inet_ntoa(dns_server)
@@ -221,6 +222,10 @@ class ClientDHCP:
         self.lease = lease_time
         self.calculate_lease_expire(self.lease_obtain, self.lease)
         self.ack_set = True
+
+        self.transaction_id = None
+        self.got_offer = False
+        self.got_nak = False
 
     def decline(self):
         op_code = OP_REQUEST
@@ -264,6 +269,13 @@ class ClientDHCP:
         client_socket.sendto(packet, ("255.255.255.255", 67))
         client_socket.close()
 
+        self.dhcp_server_ip = None
+        self.offered_addr = None
+        self.transaction_id = None
+        self.got_offer = False
+        self.got_nak = False
+        self.ack_set = False
+
     def release(self):
         self.transaction_id = random.randint(1, 2 ** 32 - 1)
         op_code = OP_REQUEST
@@ -306,6 +318,20 @@ class ClientDHCP:
         client_socket.sendto(packet, ("255.255.255.255", 67))
         client_socket.close()
 
+        self.ip_address = "0.0.0.0"
+        self.dns_server_address = ""  # DNS server IP address
+        self.lease_obtain = None
+        self.lease = None
+        self.lease_expires = None
+        self.subnet_mask = None
+        self.router = None
+        self.dhcp_server_ip = None
+        self.offered_addr = None
+        self.transaction_id = None
+        self.got_offer = False
+        self.got_nak = False
+        self.ack_set = False
+
     def inform(self, dns_addr: str = None, gateway: str = None):
         pass
 
@@ -313,8 +339,7 @@ class ClientDHCP:
         op_code, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr = struct.unpack(
             '! B B B B I H H 4s4s4s4s6s', offer_packet[0:34])
 
-        server_id, lease_time, renew_val_time, rebinding_time, subnet_mask, broadcast_address, router, \
-            dns_server = struct.unpack("! 4s I I I 4s 4s 4s 4s", offer_packet[243: 275])
+        server_id = struct.unpack("! 4s", offer_packet[245: 249])[0]
         self.dhcp_server_ip = inet_ntoa(server_id)
         self.offered_addr = inet_ntoa(yiaddr)
         self.got_offer=True
@@ -337,13 +362,15 @@ class ClientDHCP:
                 client_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
                 client_socket.bind(('0.0.0.0', 68))
 
-                ack_packet = client_socket.recv(2048)
-                client_socket.close()
-                print(ack_packet)
-                if ack_packet[0:2] == b'\x02\x01':
-                    if ack_packet[240:243] == b'5\x01\x05':
-                        self.set_ack(dhcp_packet)
-
+                try:
+                    ack_packet = client_socket.recv(2048)
+                    client_socket.close()
+                    print(ack_packet)
+                    if ack_packet[0:2] == b'\x02\x01':
+                        if ack_packet[240:243] == b'5\x01\x05':
+                            self.set_ack(dhcp_packet)
+                except Exception as e:
+                    self.got_nak = True
 
 if __name__ == '__main__':
     client = ClientDHCP()

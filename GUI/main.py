@@ -55,7 +55,6 @@ class MainGui:
         if self.operator.dhcp_client.ip_address == "0.0.0.0":
             self.dns_button.configure(state="disabled")
 
-
     def dhcp_client_request(self):
         ack_or_nak = self.operator.dhcp_request()
         self.clear_screen(self.op_frame)
@@ -146,9 +145,7 @@ class MainGui:
         release_button.grid(row=2, column=0, padx=(60, 60), pady=10)
 
     def dhcp_op(self):
-        # TODO: move the initialisation to the main and add some explanation of the program
-        self.middle_frame()
-        self.opp_frame()
+        self.clear_screen(self.mid_frame)
 
         dhcp_textbox = CTkTextbox(self.mid_frame, width=250, height=380)
         dhcp_textbox.grid(row=0, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
@@ -189,21 +186,19 @@ class MainGui:
                                    command=lambda: self.get_ip(hostname_entry))
         approve_button.grid(row=2, column=0, padx=(60, 60), pady=10)
 
-
     def dns_screen(self):
         self.clear_screen(self.mid_frame)
 
         dhcp_textbox = CTkTextbox(self.mid_frame, width=250, height=380)
         dhcp_textbox.grid(row=0, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
 
-        # TODO: update - please fill an hostname if the format of www.name.org/com/...
         dhcp_info_text = 'DNS\n\nIn this page you will have an option to \nmake a DNS query ' \
                          'where you will \nprovide a hostname and as a result, \nyou will get the corresponding IP ' \
                          '\naddress.\n\n'\
                          'Notice that this option won`t be \navailable if you haven`t generated \nyourself an IP address' \
                          'yet through the DHCP option menu.' \
                          '\n\nWhen making a DNS query, please fill out an address in the form of:' \
-                         '\n'
+                         '\nwww.name.com/org/co.il ect...'
 
         dhcp_textbox.insert("0.0", dhcp_info_text)
 
@@ -242,14 +237,13 @@ class MainGui:
         dhcp_textbox = CTkTextbox(self.mid_frame, width=250, height=380)
         dhcp_textbox.grid(row=0, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
 
-        # TODO: update - please fill an hostname if the format of www.name.org/com/...
-        dhcp_info_text = 'DNS\n\nIn this page you will have an option to \nmake a DNS query ' \
-                         'where you will \nprovide a hostname and as a result, \nyou will get the corresponding IP ' \
-                         '\naddress.\n\n' \
-                         'Notice that this option won`t be \navailable if you haven`t generated \nyourself an IP address' \
-                         'yet through the DHCP option menu.' \
-                         '\n\nWhen making a DNS query, please fill out an address in the form of:' \
-                         '\n'
+        dhcp_info_text = 'Client Info\n\nThe following information shows the\nclient`s network details, ' \
+                         'which are\nbeing updated throughout the\nprogram`s run.' \
+                         '\n\nThe Physical Address field is your\ncomputer`s Mac Address.' \
+                         '\n\nAt the beginning of the program run\nor when the DHCP RELEASE action\n' \
+                         'takes place, the following fields will \nbe empty:\n- "IPv4 Subnet Mask"\n- "Lease Obtain"\n- "Lease Expires"\n- ' \
+                         '"IPv4 Default Gateway"\n- "IPv4 DHCP Server"\n- "IPv4 DNS Server"' \
+                         '\nThese fields will be empty since they relay on the DHCP IP claiming \nprocedure. '
 
         dhcp_textbox.insert("0.0", dhcp_info_text)
         self.client_info_details()
@@ -275,6 +269,9 @@ class MainGui:
 
         client_details_button = CTkButton(self.main_menu_frame, text="Client Info", command=self.client_info_screen)
         client_details_button.grid(row=7, column=0, padx=20, pady=10)
+
+        self.middle_frame()
+        self.opp_frame()
 
     def middle_frame(self):
         self.mid_frame.grid(row=0, column=3, padx=(10, 10), pady=(5, 5), sticky="nsew")
