@@ -27,9 +27,14 @@ class Operator:
     def dhcp_generate_ip(self):
         self.dhcp_client.discover()
         try:
-            while not self.dhcp_client.got_offer:
-                print("didnt get offer")
-                # self.dhcp_client.discover()
+            if not self.dhcp_client.got_offer:
+                for i in range(3):
+                    if not self.dhcp_client.got_offer:
+                        self.dhcp_client.discover()
+                    else:
+                        break
+            if not self.dhcp_client.got_offer:
+                return "timeout error"
 
             print("generated")
             return self.dhcp_client.offered_addr
@@ -41,13 +46,13 @@ class Operator:
         try:
             while self.dhcp_client.ip_address == "0.0.0.0":
                 if self.dhcp_client.got_nak:
-                    return False
+                    return "False"
                 if not self.dhcp_client.ack_set and not self.dhcp_client.got_nak:
-                    self.dhcp_client.request()
+                    return "error"
 
             if self.dhcp_client.ip_address != "0.0.0.0":
                 print("ack")
-                return True
+                return "True"
         except RuntimeError:
             print("RuntimeError")
 

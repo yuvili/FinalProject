@@ -3,12 +3,6 @@
 # Lease time - Thread that always checks TTL for the IP address
 import binascii
 import struct
-import threading
-from scapy.layers.dhcp import DHCP, BOOTP
-from scapy.layers.l2 import Ether
-from scapy.layers.inet import IP, UDP
-from scapy.sendrecv import *
-from scapy.utils import mac2str
 import random
 import socket
 from socket import *
@@ -43,197 +37,71 @@ def generate_ip_addresses():
     for i in range(2, SCOPE):
         available_addresses.append(f"10.0.0.{str(i)}")
 
-
-# def offer(packet):
-#     print("start offer")
-#     # dhcp_header = struct.unpack('! B B B B I H H 4s4s4s4s', packet[0:28])
-#     #
-#     # # Print the fields in the DHCP header
-#     # print('Opcode: ', dhcp_header[0])
-#     # print('Hardware type: ', dhcp_header[1])
-#     # print('Hardware address length: ', dhcp_header[2])
-#     # print('Hop count: ', dhcp_header[3])
-#     # print('Transaction ID: ', dhcp_header[4])
-#     # print('Seconds elapsed: ', dhcp_header[5])
-#     # print('Flags: ', dhcp_header[6])
-#     # print('Client IP address: ', inet_ntoa(dhcp_header[7]))
-#     # print('Your IP address: ', inet_ntoa(dhcp_header[8]))
-#     # print('Server IP address: ', inet_ntoa(dhcp_header[9]))
-#     # print('Gateway IP address: ', inet_ntoa(dhcp_header[10]))
-#     # Define the callback function for sniffing DHCP Discover packets
-#
-#     # client_mac = struct.unpack('!6s6s', packet[6:6 + 12])[0]
-#     # print(client_mac)
-#     op_code, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr = struct.unpack('! B B B B I H H 4s4s4s4s16s', packet[0:28+16])
-#
-#     offered_ip = random.choice(available_addresses)
-#     op_code = MSG_TYPE_OFFER
-#     htype = 1  # Ethernet
-#     hlen = 6  # Address length
-#     hops = 0
-#     xid = xid
-#     secs = 0
-#     flags = 0x0000
-#     ciaddr = ciaddr
-#     yiaddr = inet_pton(AF_INET, offered_ip)
-#     siaddr = inet_pton(AF_INET, SERVER_IP)
-#     giaddr = inet_pton(AF_INET, "0.0.0.0")
-#     # chaddr = packet[12]
-#     padding = b'\x00' * 10  # padding (unused)
-#     sname = b'\x00' * 64  # srchostname
-#     file = b'\x00' * 128  # bootfilename
-#     magic_cookie = b'\x63\x82\x53\x63'  # magic cookie: DHCP option 99, 130, 83, 99
-#
-#     discover_header = struct.pack('! B B B B I H H 4s4s4s4s', op_code, htype, hlen, hops, xid, secs, flags,
-#                                   ciaddr, yiaddr,siaddr, giaddr) + chaddr + padding + sname + file + magic_cookie
-#
-#     msg_type = b'\x35\x01\x01'  # DHCP message type: 1 = DHCP DISCOVER
-#     # par_req_list = b'\x37\x0d\x01\x1c\x02\x03\x0f\x06\x77\x0c\x2c\x2f\x1a\x79\x2a'
-#     client_id = b'\x3d\x06' + chaddr  # DHCP client identifier: 6 bytes for MAC address
-#     end = b'\xff'  # end of options marker
-#     dhcp_options = msg_type + client_id + end
-#
-#     # Construct the DHCP Offer packet
-#     dhcp_offer = b'\x02\x01\x06\x00' + \
-#                  b'\x39\x03\x00\x00\x01\x00\x00\x00' + \
-#                  b'\x00\x00\x00\x00\x00\x00\x00\x00' + \
-#                  packet[16:20] + \
-#                  b'\xff\xff\xff\x00' + \
-#                  b'\x03\x02\x04\xff\xff\xff\x00' + \
-#                  b'\x06\x0c\x2b\x06\x01\x05\x2b\x0f\x03\x06\x2b\x0e\x03\x0f\x01\x00\x06\x0f\x02\x01'
-#
-#     dhcp_offer = discover_header + dhcp_options
-#     # Create a socket object and set the socket options
-#     server_socket = socket(AF_INET, SOCK_DGRAM)
-#     # server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-#     server_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
-#     server_socket.bind((SERVER_IP, 67))
-#
-#     # Set the destination address and port
-#     dest_addr = ('255.255.255.255', 68)
-#
-#     # Send the DHCP Offer packet to the client
-#     server_socket.sendto(dhcp_offer, dest_addr)
-#
-#     # Close the socket
-#     server_socket.close()
-#
-#     print("done offer")
-
 def offer(packet):
     print("start offer")
-    # if packet[IP].src != "0.0.0.0":
-    #     return
     op_code, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr = struct.unpack('! B B B B I H H 4s4s4s4s6s', packet[0:28+6])
-
-    print('Opcode: ', op_code)
-    print('Hardware type: ', htype)
-    print('Hardware address length: ', hlen)
-    print('Hop count: ', hops)
-    print('Transaction ID: ', xid)
-    print('Seconds elapsed: ', secs)
-    print('Flags: ', flags)
-    print('Client IP address: ', inet_ntoa(ciaddr))
-    print('Your IP address: ', inet_ntoa(yiaddr))
-    print('Server IP address: ', inet_ntoa(siaddr))
-    print('Gateway IP address: ', inet_ntoa(giaddr))
-    print('Mac address: ', chaddr)
-    print(type(chaddr))
-
-    mac_string = binascii.hexlify(chaddr).decode('utf-8')
-    client_mac_add = ':'.join(mac_string[i:i + 2] for i in range(0, len(mac_string), 2))
 
     offered_ip = random.choice(available_addresses)
     transaction_id = xid
-    offer_packet = (
-            Ether(dst="ff:ff:ff:ff:ff:ff", type=0x0800) /
-            IP(src=SERVER_IP, dst=offered_ip) /
-            UDP(sport=SERVER_PORT, dport=CLIENT_PORT) /
-            BOOTP(
-                op=OP_REPLY,
-                yiaddr=offered_ip,
-                siaddr=SERVER_IP,
-                chaddr=mac2str(client_mac_add),
-                xid=transaction_id,
-            ) /
-            DHCP(options=[
-                ("message-type", MSG_TYPE_OFFER),
-                ("server_id", SERVER_IP),
-                ("lease_time", LEASE),
-                ("subnet_mask", "255.255.255.0"),
-                ("router", "10.0.0.1"),
-                ("name_server", DNS_SERVER_IP),
-                ("domain", "localdomain"),
-                "end"]
-            )
-    )
-    sendp(offer_packet, verbose=False)
-    print("done offer")
+    print(transaction_id)
 
-# def ack(packet):
-#     client_mac_add = packet[Ether].src
-#     transaction_id = packet[BOOTP].xid
-#     chosen_ip = packet[DHCP].options[2][1]
-#
-#     if chosen_ip not in available_addresses:
-#         print("chosen address not available")
-#         nak(packet)
-#         return
-#
-#     info = {
-#         "MAC address": client_mac_add,
-#         "Lease time": LEASE
-#     }
-#
-#     log_file[chosen_ip] = info
-#     available_addresses.remove(chosen_ip)
-#
-#     ack_packet = (
-#             Ether(dst="ff:ff:ff:ff:ff:ff", type=0x800) /
-#             IP(src=SERVER_IP, dst=BROADCAST_IP) /
-#             UDP(sport=SERVER_PORT, dport=CLIENT_PORT) /
-#             BOOTP(
-#                 op=OP_REPLY,
-#                 yiaddr=chosen_ip,
-#                 siaddr=SERVER_IP,
-#                 chaddr=mac2str(client_mac_add),
-#                 xid=transaction_id,
-#             ) /
-#             DHCP(options=[
-#                 ("message-type", MSG_TYPE_ACK),
-#                 ("server_id", SERVER_IP),
-#                 ("lease_time", LEASE),
-#                 ("broadcast_address", "127.0.0.255"),
-#                 ("router", "10.0.0.1"),
-#                 ("name_server", DNS_SERVER_IP),
-#                 "end"]
-#             )
-#     )
-#     sendp(ack_packet, verbose=False)
+    op_code = OP_REPLY
+    htype = 1  # Ethernet
+    hlen = 6  # Address length
+    hops = 0
+    secs = 0
+    flags = 0x0000
+    yiaddr = offered_ip
+    siaddr = DNS_SERVER_IP
+    giaddr = DNS_SERVER_IP  # change
+    chaddr = chaddr
+    padding = b'\x00' * 10  # padding (unused)
+    sname = b'\x00' * 64  # srchostname
+    file = b'\x00' * 128  # bootfilename
+    magic_cookie = b'\x63\x82\x53\x63'  # magic cookie: DHCP option 99, 130, 83, 99
+
+    # mac_address_bytes = binascii.unhexlify(chaddr.replace(':', ''))
+    offer_header = struct.pack('! B B B B I H H', op_code, htype, hlen, hops, xid, secs, flags) + \
+                      ciaddr + inet_pton(AF_INET, yiaddr) + inet_pton(AF_INET, siaddr) + \
+                      inet_pton(AF_INET, giaddr) + chaddr + padding + sname + file + magic_cookie
+
+    msg_type = b'\x35\x01\x02'  # DHCP message type: 1 = DHCP DISCOVER
+    server_id = b'\x36\x04' + inet_pton(AF_INET, SERVER_IP)
+    lease_time = b'\x33\x04' + LEASE.to_bytes(4, "big")
+    renewal_lease_time = b'\x3a\x04' + LEASE.to_bytes(4, "big")
+    rebinding_lease_time = b'\x3b\x04' + LEASE.to_bytes(4, "big")
+    sub_mask = b'\x01\x04' + inet_pton(AF_INET, "255.255.255.0")
+    broadcast_addr = b'\x1c\x04' + inet_pton(AF_INET, "10.0.0.255")
+    router = b'\x03\x04' + inet_pton(AF_INET, DNS_SERVER_IP)
+    dns_server = b'\x06\x04' +inet_pton(AF_INET, DNS_SERVER_IP)
+    end = b'\xff'  # end of options marker
+    dhcp_options = msg_type + server_id + lease_time + renewal_lease_time+ rebinding_lease_time + sub_mask \
+                   + broadcast_addr + router + dns_server + end
+
+    # Create a socket object using UDP and bind it to a local port
+    server_socket = socket(AF_INET, SOCK_DGRAM)
+    server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    server_socket.setsockopt(SOL_SOCKET, SO_REUSEPORT, 1)
+    server_socket.bind(("", 67))
+    server_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+
+    # Build the full packet
+    packet = offer_header + dhcp_options
+
+    # Send the packet to the broadcast address on UDP port 68 (DHCP client port)
+    broadcast_address = ("255.255.255.255", 68)
+    server_socket.sendto(packet, broadcast_address)
+    server_socket.close()
+    start_server()
+    print("done offer")
 
 def ack(packet):
     op_code, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr = struct.unpack(
         '! B B B B I H H 4s4s4s4s6s', packet[0:28 + 6])
 
-    print('Opcode: ', op_code)
-    print('Hardware type: ', htype)
-    print('Hardware address length: ', hlen)
-    print('Hop count: ', hops)
-    print('Transaction ID: ', xid)
-    print('Seconds elapsed: ', secs)
-    print('Flags: ', flags)
-    print('Client IP address: ', inet_ntoa(ciaddr))
-    print('Your IP address: ', inet_ntoa(yiaddr))
-    print('Server IP address: ', inet_ntoa(siaddr))
-    print('Gateway IP address: ', inet_ntoa(giaddr))
-    print('Mac address: ', chaddr)
-    print(type(chaddr))
-
     mac_string = binascii.hexlify(chaddr).decode('utf-8')
     client_mac_add = ':'.join(mac_string[i:i + 2] for i in range(0, len(mac_string), 2))
-    transaction_id = xid
     chosen_ip = inet_ntoa(struct.unpack('! 4s', packet[-5:-1])[0])
-    # print(inet_ntoa(chosen_ip[0]))
 
     if chosen_ip not in available_addresses:
         print("chosen address not available")
@@ -248,28 +116,53 @@ def ack(packet):
     log_file[chosen_ip] = info
     available_addresses.remove(chosen_ip)
 
-    ack_packet = (
-            Ether(dst="ff:ff:ff:ff:ff:ff", type=0x800) /
-            IP(src=SERVER_IP, dst=BROADCAST_IP) /
-            UDP(sport=SERVER_PORT, dport=CLIENT_PORT) /
-            BOOTP(
-                op=OP_REPLY,
-                yiaddr=chosen_ip,
-                siaddr=SERVER_IP,
-                chaddr=mac2str(client_mac_add),
-                xid=transaction_id,
-            ) /
-            DHCP(options=[
-                ("message-type", MSG_TYPE_ACK),
-                ("server_id", SERVER_IP),
-                ("lease_time", LEASE),
-                ("broadcast_address", "127.0.0.255"),
-                ("router", "10.0.0.1"),
-                ("name_server", DNS_SERVER_IP),
-                "end"]
-            )
-    )
-    sendp(ack_packet, verbose=False)
+    op_code = OP_REPLY
+    htype = 1  # Ethernet
+    hlen = 6  # Address length
+    hops = 0
+    secs = 0
+    flags = 0x0000
+    yiaddr = chosen_ip
+    siaddr = DNS_SERVER_IP
+    giaddr = DNS_SERVER_IP  # change
+    chaddr = chaddr
+    padding = b'\x00' * 10  # padding (unused)
+    sname = b'\x00' * 64  # srchostname
+    file = b'\x00' * 128  # bootfilename
+    magic_cookie = b'\x63\x82\x53\x63'  # magic cookie: DHCP option 99, 130, 83, 99
+
+    ack_header = struct.pack('! B B B B I H H', op_code, htype, hlen, hops, xid, secs, flags) + \
+                   ciaddr + inet_pton(AF_INET, yiaddr) + inet_pton(AF_INET, siaddr) + \
+                   inet_pton(AF_INET, giaddr) + chaddr + padding + sname + file + magic_cookie
+
+    msg_type = b'\x35\x01\x05'  # DHCP message type: 5 = DHCP ACK
+    server_id = b'\x36\x04' + inet_pton(AF_INET, SERVER_IP)
+    lease_time = b'\x33\x04' + LEASE.to_bytes(4, "big")
+    renewal_lease_time = b'\x3a\x04' + LEASE.to_bytes(4, "big")
+    rebinding_lease_time = b'\x3b\x04' + LEASE.to_bytes(4, "big")
+    sub_mask = b'\x01\x04' + inet_pton(AF_INET, "255.255.255.0")
+    broadcast_addr = b'\x1c\x04' + inet_pton(AF_INET, "10.0.0.255")
+    router = b'\x03\x04' + inet_pton(AF_INET, DNS_SERVER_IP)
+    dns_server = b'\x06\x04' + inet_pton(AF_INET, DNS_SERVER_IP)
+    end = b'\xff'  # end of options marker
+    dhcp_options = msg_type + server_id + lease_time + renewal_lease_time + rebinding_lease_time + sub_mask \
+                   + broadcast_addr + router + dns_server + end
+
+    # Create a socket object using UDP and bind it to a local port
+    server_socket = socket(AF_INET, SOCK_DGRAM)
+    server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    server_socket.setsockopt(SOL_SOCKET, SO_REUSEPORT, 1)
+    server_socket.bind(("", 67))
+    server_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+
+    # Build the full packet
+    packet = ack_header + dhcp_options
+
+    # Send the packet to the broadcast address on UDP port 67 (DHCP server port)
+    broadcast_address = ("255.255.255.255", 68)
+    server_socket.sendto(packet, broadcast_address)
+    server_socket.close()
+
 
 def nak(request_packet):
     print("start nak")
@@ -277,26 +170,44 @@ def nak(request_packet):
     op_code, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr = struct.unpack(
         '! B B B B I H H 4s4s4s4s6s', request_packet[0:28 + 6])
 
-    mac_string = binascii.hexlify(chaddr).decode('utf-8')
-    client_mac_add = ':'.join(mac_string[i:i + 2] for i in range(0, len(mac_string), 2))
-    transaction_id = xid
-    nak_packet = (
-            Ether(dst="ff:ff:ff:ff:ff:ff", type=0x0800) /
-            IP(src=SERVER_IP, dst=BROADCAST_IP) /
-            UDP(sport=SERVER_PORT, dport=CLIENT_PORT) /
-            BOOTP(
-                op=OP_REPLY,
-                siaddr=SERVER_IP,
-                chaddr=mac2str(client_mac_add),  # doesn't print the mac address correctly
-                xid=transaction_id,
-            ) /
-            DHCP(options=[
-                ("message-type", MSG_TYPE_NAK),
-                ("server_id", SERVER_IP),
-                "end"]
-            )
-    )
-    sendp(nak_packet, verbose=False)
+    op_code = OP_REPLY
+    htype = 1  # Ethernet
+    hlen = 6  # Address length
+    hops = 0
+    secs = 0
+    flags = 0x0000
+    siaddr = DNS_SERVER_IP
+    giaddr = DNS_SERVER_IP  # change
+    padding = b'\x00' * 10  # padding (unused)
+    sname = b'\x00' * 64  # srchostname
+    file = b'\x00' * 128  # bootfilename
+    magic_cookie = b'\x63\x82\x53\x63'  # magic cookie: DHCP option 99, 130, 83, 99
+
+    nak_header = struct.pack('! B B B B I H H', op_code, htype, hlen, hops, xid, secs, flags) + \
+                 ciaddr + yiaddr + inet_pton(AF_INET, siaddr) + \
+                 inet_pton(AF_INET, giaddr) + chaddr + padding + sname + file + magic_cookie
+
+    msg_type = b'\x35\x01\x06'  # DHCP message type: 5 = DHCP ACK
+    server_id = b'\x36\x04' + inet_pton(AF_INET, SERVER_IP)
+    message = b'\x38\x0F' + bytes("wrong server-ID",'utf-8')
+
+    end = b'\xff'  # end of options marker
+    dhcp_options = msg_type + server_id + message + end
+
+    # Create a socket object using UDP and bind it to a local port
+    server_socket = socket(AF_INET, SOCK_DGRAM)
+    server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    server_socket.setsockopt(SOL_SOCKET, SO_REUSEPORT, 1)
+    server_socket.bind(("", 67))
+    server_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+
+    # Build the full packet
+    packet = nak_header + dhcp_options
+
+    # Send the packet to the broadcast address on UDP port 67 (DHCP server port)
+    broadcast_address = ("255.255.255.255", 68)
+    server_socket.sendto(packet, broadcast_address)
+    server_socket.close()
     print("done nak")
 
 
@@ -324,32 +235,23 @@ def handle_dhcp_packet(dhcp_packet):
 
 def start_server() -> None:
     generate_ip_addresses()  # Creating the database of all the available IP address
-    sniffer_socket = socket(AF_INET, SOCK_DGRAM)
-    sniffer_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    sniffer_socket.bind(('0.0.0.0', 67))
-    sniffer_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
     while True:
         try:
+            sniffer_socket = socket(AF_INET, SOCK_DGRAM)
+            sniffer_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+            sniffer_socket.bind(('0.0.0.0', 67))
+            sniffer_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
             packet = sniffer_socket.recv(2048)
-            print(packet)
-            print(packet[0:2])
-            print(packet[240:243])
-            print(packet[-5:-1])
+            # print(packet)
+            # print(packet[0:2])
+            # print(packet[240:243])
+            # print(packet[-5:-1])
+            sniffer_socket.close()
             handle_dhcp_packet(packet)
         except KeyboardInterrupt:
             print("Shutting down...")
             break
 
-        # b'\x01\x01\x06\x00\
-        # x1e@u\x17\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xb0\xbe\x83\x1e\n0\
-        # x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\
-        # x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\
-        # x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\
-        # x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\
-        # x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\
-        # x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\
-        # x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00c\x82Sc5\x01\x01=\x06\xb0\xbe\x83\x1e
-        # \n07\x03\x03\x01\x06\xff'
 
 if __name__ == '__main__':
     start_server()

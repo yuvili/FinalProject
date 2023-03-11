@@ -59,22 +59,40 @@ class MainGui:
     def dhcp_client_request(self):
         ack_or_nak = self.operator.dhcp_request()
         self.clear_screen(self.op_frame)
-        if ack_or_nak:
+        if ack_or_nak == "True":
             ack_label = CTkLabel(self.op_frame, text=f"Your request is approved!", fg_color="green")
             ack_label.grid(row=0, column=0, padx=(60,60), pady=60)
             self.update_dns_button()
 
-        else:
+            approve_button = CTkButton(self.op_frame, text="OK",
+                                       command=self.dhcp_screen)
+            approve_button.grid(row=1, column=0, padx=(60, 60), pady=10)
+
+        elif ack_or_nak == "False":
             ack_label = CTkLabel(self.op_frame, text=f"Your request is denied!", fg_color="red")
             ack_label.grid(row=0, column=0, padx=(60,60), pady=60)
 
-        approve_button = CTkButton(self.op_frame, text="OK",
-                                command=self.dhcp_screen)
-        approve_button.grid(row=1, column=0, padx=(60,60), pady=10)
+            approve_button = CTkButton(self.op_frame, text="OK",
+                                       command=self.dhcp_screen)
+            approve_button.grid(row=1, column=0, padx=(60, 60), pady=10)
+
+        elif ack_or_nak == "error":
+            self.dhcp_error_screen()
 
     def dhcp_client_decline(self):
         self.operator.dhcp_decline()
         self.dhcp_screen()
+
+    def dhcp_error_screen(self):
+        self.clear_screen(self.op_frame)
+
+        dhcp_actions = CTkLabel(self.op_frame, text="Something wend wrong...", font=CTkFont(size=15, weight="bold"))
+        dhcp_actions.grid(row=0, column=0, padx=40, pady=(60, 10))
+
+        approve_button = CTkButton(self.op_frame, text="Retry",
+                                   command=self.dhcp_generateIP_frame)
+        approve_button.grid(row=1, column=0, padx=(60, 60), pady=10)
+
 
     def dhcp_generateIP_frame(self):
         self.clear_screen(self.op_frame)
@@ -83,6 +101,9 @@ class MainGui:
         dhcp_actions.grid(row=0, column=0, padx=40, pady=(60, 10))
 
         offered_ip = self.operator.dhcp_generate_ip()
+        if offered_ip == "timeout error":
+            self.dhcp_error_screen()
+
 
         offered_ip_label = CTkLabel(self.op_frame, text=f"You got the IP: {offered_ip}")
         offered_ip_label.grid(row=1, column=0, padx=10, pady=(20, 10))
@@ -270,6 +291,6 @@ class MainGui:
 
 if __name__ == '__main__':
     threading.Thread(target=server.start_server).start()
-    threading.Thread(target=ServerDNS.start_server).start()
+    # threading.Thread(target=ServerDNS.start_server).start()
 
     gui = MainGui()
