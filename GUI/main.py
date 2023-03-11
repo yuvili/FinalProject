@@ -92,7 +92,6 @@ class MainGui:
                                    command=self.dhcp_generateIP_frame)
         approve_button.grid(row=1, column=0, padx=(60, 60), pady=10)
 
-
     def dhcp_generateIP_frame(self):
         self.clear_screen(self.op_frame)
 

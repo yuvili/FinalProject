@@ -23,11 +23,13 @@ OP_REPLY = 2
 
 SERVER_IP = "10.0.0.1"
 DNS_SERVER_IP = '127.0.0.1'
+ROUTER_IP = "10.0.0.1"
 SERVER_PORT = 67
 CLIENT_PORT = 68
 SCOPE = 254
 LEASE = 86400
 BROADCAST_IP = "255.255.255.255"
+SUBNET_MASK = "255.255.255.0"
 available_addresses = []
 log_file = {}
 
@@ -70,9 +72,9 @@ def offer(packet):
     lease_time = b'\x33\x04' + LEASE.to_bytes(4, "big")
     renewal_lease_time = b'\x3a\x04' + LEASE.to_bytes(4, "big")
     rebinding_lease_time = b'\x3b\x04' + LEASE.to_bytes(4, "big")
-    sub_mask = b'\x01\x04' + inet_pton(AF_INET, "255.255.255.0")
-    broadcast_addr = b'\x1c\x04' + inet_pton(AF_INET, "10.0.0.255")
-    router = b'\x03\x04' + inet_pton(AF_INET, DNS_SERVER_IP)
+    sub_mask = b'\x01\x04' + inet_pton(AF_INET, SUBNET_MASK)
+    broadcast_addr = b'\x1c\x04' + inet_pton(AF_INET, BROADCAST_IP)
+    router = b'\x03\x04' + inet_pton(AF_INET, ROUTER_IP)
     dns_server = b'\x06\x04' +inet_pton(AF_INET, DNS_SERVER_IP)
     end = b'\xff'  # end of options marker
     dhcp_options = msg_type + server_id + lease_time + renewal_lease_time+ rebinding_lease_time + sub_mask \

@@ -16,7 +16,7 @@ DNS_QUERY_TYPES = {
     'CNAME': 5, # Canonical name
 }
 
-DNS_IP = "10.0.0.1"
+DNS_IP = "127.0.0.1"
 
 DNS_Cache = {}
 
@@ -80,7 +80,9 @@ def handle_dns_query(data, client_address, server_socket):
 def start_server():
     # Create a UDP socket to listen for DNS queries
     server_socket = socket(AF_INET, SOCK_DGRAM)
-    server_socket.bind(("127.0.0.1", 53))
+    server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    server_socket.setsockopt(SOL_SOCKET, SO_REUSEPORT, 1)
+    server_socket.bind((DNS_IP, 53))
 
     print('DNS server listening on port 53...')
     while True:
