@@ -139,7 +139,6 @@ establishes a new connection with the new server to download the image file.
 
 #### DHCP ACK Screen
 <img width="799" alt="dhcp_request_approve" src="https://user-images.githubusercontent.com/77205478/224570434-6872dbc5-5468-4830-bded-b326a2374781.png">
-.png">
 
 ### DNS Screen
 #### DNS Query
