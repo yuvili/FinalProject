@@ -126,7 +126,33 @@ it means that the image file is located on a different server.
 The client extracts the new server's IP address and port from the response and 
 establishes a new connection with the new server to download the image file.
 
-### GUI
+## GUI
+### Main Screen
+<img width="792" alt="welcome page" src="https://user-images.githubusercontent.com/77205478/224570304-894808ee-a642-42ef-a5dc-74f0453d921e.png">
+
+### DHCP Screen
+#### DHCP Main Screen
+<img width="797" alt="dhcp main" src="https://user-images.githubusercontent.com/77205478/224570375-fe901918-a48d-45ff-9e4f-062817ac88fa.png">
+
+#### DHCP OFFER Screen
+<img width="800" alt="dhcp_got_ip" src="https://user-images.githubusercontent.com/77205478/224570413-a551b21b-8eae-43d3-934f-86c0c6c381c8.png">
+
+#### DHCP ACK Screen
+<img width="799" alt="dhcp_request_approve" src="https://user-images.githubusercontent.com/77205478/224570434-6872dbc5-5468-4830-bded-b326a2374781.png">
+.png">
+
+### DNS Screen
+#### DNS Query
+<img width="796" alt="dns_main" src="https://user-images.githubusercontent.com/77205478/224571030-4b9bc38a-488b-41bc-8e43-d7b0637d6d28.png">
+
+#### DNS Response
+<img width="800" alt="dns_got_ip" src="https://user-images.githubusercontent.com/77205478/224571054-32b04b5f-caaa-4128-b4d9-663ef8145835.png">
+
+### HTTP Screen
+<img width="797" alt="http_main" src="https://user-images.githubusercontent.com/77205478/224571078-c3d1966c-3832-48ca-ba75-c1afd6eb0534.png">
+
+### Client Info Screen
+<img width="803" alt="client info" src="https://user-images.githubusercontent.com/77205478/224571094-ecab6ac2-f5af-43af-a9a4-44d1ef3f1801.png">
 
 ## Sequence Diagram
 ### DHCP
