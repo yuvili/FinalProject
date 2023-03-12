@@ -54,7 +54,7 @@ def offer(packet):
     secs = 0
     flags = 0x0000
     yiaddr = inet_pton(AF_INET, offered_ip)
-    siaddr = inet_pton(AF_INET, DNS_SERVER_IP)
+    siaddr = inet_pton(AF_INET, SERVER_IP)
     giaddr = inet_pton(AF_INET, ROUTER_IP)
     padding = b'\x00' * 10  # padding (unused)
     sname = b'\x00' * 64  # srchostname
@@ -123,7 +123,7 @@ def ack(request_packet):
     secs = 0
     flags = 0x0000
     yiaddr = inet_pton(AF_INET, chosen_ip)
-    siaddr = inet_pton(AF_INET, DNS_SERVER_IP)
+    siaddr = inet_pton(AF_INET, SERVER_IP)
     giaddr = inet_pton(AF_INET, ROUTER_IP)
     padding = b'\x00' * 10  # padding (unused)
     sname = b'\x00' * 64  # srchostname
@@ -140,7 +140,7 @@ def ack(request_packet):
     rebinding_lease_time = b'\x3b\x04' + (int(LEASE * 0.875)).to_bytes(4, "big")
     sub_mask = b'\x01\x04' + inet_pton(AF_INET, "255.255.255.0")
     broadcast_addr = b'\x1c\x04' + inet_pton(AF_INET, "10.0.0.255")
-    router = b'\x03\x04' + inet_pton(AF_INET, DNS_SERVER_IP)
+    router = b'\x03\x04' + inet_pton(AF_INET, ROUTER_IP)
     dns_server = b'\x06\x04' + inet_pton(AF_INET, DNS_SERVER_IP)
     end = b'\xff'  # end of options marker
     dhcp_options = msg_type + server_id + lease_time + renewal_lease_time + rebinding_lease_time + sub_mask \

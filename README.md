@@ -26,25 +26,23 @@ while the DNS server simplifies the process of locating resources by mapping hum
 The HTTP server redirects clients to the desired image, enabling easy access to digital content.
 Overall, this project aims to provide a comprehensive networking solution that simplifies the process of connecting to 
 the network and accessing resources.
-This project contains 3 types of application layer servers:
-- DHCP server
-- DNS server
-- HTTP server
 
-### DHCP Server
-This is an implementation of a DHCP server in Python. 
-DHCP is a protocol used to assign IP addresses and other network configuration parameters to devices on a network. 
-This server can assign IP addresses dynamically to devices on a network based on requests received from DHCP clients.
-
-#### Requirements
-
-- Python 3.x 
+## Dependencies
+- Python 3.x
+- tkinter module
+- costumetkinter module
 - socket module 
 - struct module 
 - random module 
 - binascii module
+- threading module 
 
-#### Usage
+## DHCP
+This is an implementation of a DHCP server in Python. 
+DHCP is a protocol used to assign IP addresses and other network configuration parameters to devices on a network. 
+This server can assign IP addresses dynamically to devices on a network based on requests received from DHCP clients.
+
+
 To use this DHCP server, simply run the dhcp_server.py file. 
 The server will listen for DHCP Discovery and DHCP Request messages on port 67, 
 and respond with DHCP Offer and DHCP ACK messages, respectively.
@@ -58,17 +56,8 @@ You can customize the server configuration by modifying the following variables 
 - `available_addresses`: A list of available IP addresses that can be assigned by the server
 Note that the server will only assign IP addresses from the available_addresses list, so be sure to update this list with the desired IP address range for your network.
 
-### DNS Server
+## DNS 
 This is a DNS server written in Python that can handle DNS queries and respond with an IP address for a given hostname.
-
-#### Requirements
-- Python 3.x 
-- socket module 
-- struct module 
-- time module 
-- sys module
-
-#### Usage
 
 To start the DNS server, run the following command in a terminal:
 ```sh
@@ -77,18 +66,15 @@ To start the DNS server, run the following command in a terminal:
 This will start the server on the default DNS port (53) and listen for incoming DNS queries.
 By default, the server will use a hard-coded IP address (127.0.0.1).
 
+## HTTP
 ### HTTP Server
 This is a simple web server implemented in Python using socket programming. 
 It handles with HTTP GET requests from client and respond with either an HTML file or an 
 image file. The server contain the html file and send it to the client while receiving an HTML 
 response, but this server don't have the png image file that needed for html file so while receiving png 
 image file request the server redirect the client to another server (the image server) for downloading the image.
-#### Dependencies
-- Python 3.x
-- socket library
-- threading library 
 
-#### How it Works
+#### How it works
 The server uses the socket library to create a socket object that listens for incoming packets on a specific IP address 
 and port number. 
 When a client sends an HTTP GET request to the server, the server uses the threading library to create a new thread to 
@@ -101,14 +87,8 @@ If the client requests an image file, the server sends a redirection message to 
 
 This is a simple server written in Python that serves a single image file to clients using the HTTP protocol.
 
-#### Dependencies
-This code requires the following modules:
 
-- socket: for socket programming
-- threading: to create a new thread to handle each client request
-- src.backend.HTTP_Docs.HTTP_Servers.image: a custom module that provides the image file to be served
-
-#### Implementation
+#### How it works
 
 The server is implemented using a loop that listens for incoming connections and spawns a new thread to handle each client request. 
 The client_handler function handles the communication with the client, receiving the request and sending the response.
@@ -148,10 +128,13 @@ establishes a new connection with the new server to download the image file.
 
 ### GUI
 
-### Unit-testing
-
 ## Sequence Diagram
+### DHCP
+(![DHCP_Sequence_Diagram-DHCP_Sequence_Diagram.png](..%2F..%2FDesktop%2F%D7%A9%D7%A0%D7%94%20%D7%91%D7%B3%20%D7%A1%D7%9E%D7%A1%D7%98%D7%A8%20%D7%90%D7%B3%2F%D7%A8%D7%A9%D7%AA%D7%95%D7%AA%20%D7%AA%D7%A7%D7%A9%D7%95%D7%A8%D7%AA%2FFinal%20Project%2FDHCP_Sequence_Diagram-DHCP_Sequence_Diagram.png)
 
+### DNS
+![DNS_Sequence_Diagram-DNS_Sequence_Diagram.png](..%2F..%2FDesktop%2F%D7%A9%D7%A0%D7%94%20%D7%91%D7%B3%20%D7%A1%D7%9E%D7%A1%D7%98%D7%A8%20%D7%90%D7%B3%2F%D7%A8%D7%A9%D7%AA%D7%95%D7%AA%20%D7%AA%D7%A7%D7%A9%D7%95%D7%A8%D7%AA%2FFinal%20Project%2FDNS_Sequence_Diagram-DNS_Sequence_Diagram.png)
+### HTTP
+![HTTP_Sequence_Diagram-HTTP_Sequence_Diagram.png](..%2F..%2FDesktop%2F%D7%A9%D7%A0%D7%94%20%D7%91%D7%B3%20%D7%A1%D7%9E%D7%A1%D7%98%D7%A8%20%D7%90%D7%B3%2F%D7%A8%D7%A9%D7%AA%D7%95%D7%AA%20%D7%AA%D7%A7%D7%A9%D7%95%D7%A8%D7%AA%2FFinal%20Project%2FHTTP_Sequence_Diagram-HTTP_Sequence_Diagram.png)
 ## Hierarchy
-
-## Links
+![UML_Diagram.png](..%2F..%2FDesktop%2F%D7%A9%D7%A0%D7%94%20%D7%91%D7%B3%20%D7%A1%D7%9E%D7%A1%D7%98%D7%A8%20%D7%90%D7%B3%2F%D7%A8%D7%A9%D7%AA%D7%95%D7%AA%20%D7%AA%D7%A7%D7%A9%D7%95%D7%A8%D7%AA%2FFinal%20Project%2FUML_Diagram.png)

@@ -260,8 +260,8 @@ class ClientDHCP:
         flags = 0x0000
         ciaddr = inet_pton(AF_INET, self.ip_address)
         yiaddr = inet_pton(AF_INET, self.ip_address)
-        siaddr = inet_pton(AF_INET, self.ip_address)
-        giaddr = inet_pton(AF_INET, self.ip_address)
+        siaddr = inet_pton(AF_INET, self.dhcp_server_ip)
+        giaddr = inet_pton(AF_INET, self.router)
         chaddr = binascii.unhexlify(self.mac_address.replace(':', ''))
         padding = b'\x00' * 10  # padding (unused)
         sname = b'\x00' * 64  # srchostname
