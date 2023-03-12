@@ -17,9 +17,7 @@ DNS_QUERY_TYPES = {
 }
 
 DNS_IP = "127.0.0.1"
-
 DNS_Cache = {}
-
 
 def handle_dns_query(data, client_address, server_socket):
     # Parse the DNS header

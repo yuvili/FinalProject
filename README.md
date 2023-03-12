@@ -78,6 +78,71 @@ This will start the server on the default DNS port (53) and listen for incoming 
 By default, the server will use a hard-coded IP address (127.0.0.1).
 
 ### HTTP Server
+This is a simple web server implemented in Python using socket programming. 
+It can handle HTTP GET requests from clients and respond with either an HTML file or an image file.
+
+#### Dependencies
+- Python 3.x
+- socket library
+- threading library 
+
+#### How it Works
+The server uses the socket library to create a socket object that listens for incoming packets on a specific IP address 
+and port number. 
+When a client sends an HTTP GET request to the server, the server uses the threading library to create a new thread to 
+handle the client request. 
+The thread reads the request, processes it, and sends a response back to the client. 
+If the client requests an HTML file, the server reads the file from disk and sends it back to the client. 
+If the client requests an image file, the server sends a redirection message to the client with the address of another server that contains the image file.
+
+### HTTP Image Server
+
+This is a simple server written in Python that serves a single image file to clients using the HTTP protocol.
+
+#### Dependencies
+This code requires the following modules:
+
+- socket: for socket programming
+- threading: to create a new thread to handle each client request
+- src.backend.HTTP_Docs.HTTP_Servers.image: a custom module that provides the image file to be served
+
+#### Implementation
+
+The server is implemented using a loop that listens for incoming connections and spawns a new thread to handle each client request. 
+The client_handler function handles the communication with the client, receiving the request and sending the response.
+The image file is read from disk and sent to the client in chunks of 1024 bytes, using the sendall() method of the client socket.
+
+### HTTP Client
+
+This Python script provides a simple client that connects to a server to download an HTML file and an image file.
+
+#### How it works
+The client uses socket programming to establish a connection with the server and send HTTP requests. 
+Specifically, it sends two requests:
+
+An HTTP GET request for the HTML file:
+```vbnet 
+GET / HTTP/1.1
+Host: 127:0:0:1
+Accept: text/html,application/xhtml+xml
+Connection: keep-alive
+```
+
+If the server responds with a status of HTTP/1.1 200 OK (text/html), the client extracts the HTML content from the response and saves it to a new file named new_html.html. It then opens this file in a web browser and sends a request for the image file.
+An HTTP GET request for the image file:
+```vbnet
+GET /imgs/OurImage.png HTTP/1.1
+Host: 127:0:0:1
+Accept: image/webp,*/*
+Connection: keep-alive
+```
+If the server responds with a status of HTTP/1.1 200 OK (JPEG JFIF image), 
+the client extracts the image content from the response and saves it to a new file named 
+OurImage.png.
+If the server responds with a status of HTTP/1.1 301 Moved Permanently, 
+it means that the image file is located on a different server. 
+The client extracts the new server's IP address and port from the response and 
+establishes a new connection with the new server to download the image file.
 
 ### GUI
 

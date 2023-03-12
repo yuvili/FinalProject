@@ -1,7 +1,10 @@
 import threading
 from customtkinter import *
+
 import Operations
 from src.backend.DHCP_Docs import dhcp_server
+from src.backend.DNS_Docs import dns_server
+from src.backend.HTTP_Docs.HTTP_Servers import http_tcp_server, http_tcp_image_server
 
 
 class MainGui:
@@ -357,7 +360,7 @@ class MainGui:
 
 if __name__ == '__main__':
     threading.Thread(target=dhcp_server.start_server).start()
-    # threading.Thread(target=http_tcp_server.start_server).start()
-    # threading.Thread(target=http_tcp_image_server.start_server).start()
+    threading.Thread(target=http_tcp_server.start_server).start()
+    threading.Thread(target=http_tcp_image_server.start_server).start()
 
     gui = MainGui()

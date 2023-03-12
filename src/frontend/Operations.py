@@ -5,6 +5,8 @@ from src.backend.DHCP_Docs.dhcp_client import ClientDHCP
 from src.backend.DNS_Docs.dns_client import ClientDNS
 from tkinter import *
 
+from src.backend.HTTP_Docs.HTTP_Client import http_tcp_client
+
 
 class Operator:
 
@@ -79,9 +81,9 @@ class Operator:
             return "Wrong address format"
 
     def get_image(self):
-        # http_tcp_client.start_client()
+        http_tcp_client.start_client()
         print("done html")
-        webbrowser.open_new('new_html.html')
+        # webbrowser.open_new('new_html.html')
 
 
 
