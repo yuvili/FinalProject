@@ -14,6 +14,18 @@ sudo python3 dns_server.py
 3. Next, navigate to ``src\frontend`` folder and run ```main.py```
 
 ## Introduction
+The goal of this project is to develop a system that combines three 
+essential servers: a DHCP server, a DNS server, and an HTTP server. 
+The DHCP server provides the option for clients to claim an IP address and release it when no longer needed. 
+The DNS server enables clients to send DNS queries and receive responses. 
+Lastly, the HTTP server is designed to redirect clients to a specific image through a URL.
+The combination of these servers enables clients to easily connect to the network and access resources, 
+including web pages and other digital content. 
+The DHCP server assigns IP addresses dynamically, ensuring efficient use of available resources, 
+while the DNS server simplifies the process of locating resources by mapping human-readable domain names to IP addresses. 
+The HTTP server redirects clients to the desired image, enabling easy access to digital content.
+Overall, this project aims to provide a comprehensive networking solution that simplifies the process of connecting to 
+the network and accessing resources.
 This project contains 3 types of application layer servers:
 - DHCP server
 - DNS server

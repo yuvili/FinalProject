@@ -49,13 +49,6 @@ def handle_dns_query(data, client_address, server_socket):
             hostname_ttl = 10
             DNS_Cache[hostname] = {"ip": ip_address, "ttl": hostname_ttl}
 
-        # # Determine the IP address to return based on the query name and type
-        # ip_address = '127.0.0.1'  # Default to localhost
-        # if query_name == 'example.com' and query_type == DNS_QUERY_TYPES['A']:
-        #     ip_address = '192.0.2.1'  # Example IPv4 address
-        # elif query_name == 'example.com' and query_type == DNS_QUERY_TYPES['AAAA']:
-        #     ip_address = '2001:db8::1'  # Example IPv6 address
-
         hostname_labels = hostname.split('.')
         hostname_bytes = b''
         for label in hostname_labels:
@@ -76,6 +69,8 @@ def handle_dns_query(data, client_address, server_socket):
 
         # Send the DNS response
         server_socket.sendto(response_data, client_address)
+        print("---------------------")
+        print("DNS Server sent response")
 
 def start_server():
     # Create a UDP socket to listen for DNS queries
@@ -87,6 +82,8 @@ def start_server():
     print('DNS server listening on port 53...')
     while True:
         data, client_address = server_socket.recvfrom(1024)
+        print("---------------------")
+        print("DNS Server got a DNS Query")
         handle_dns_query(data, client_address, server_socket)
 
 

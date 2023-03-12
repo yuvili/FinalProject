@@ -306,17 +306,17 @@ class ClientDHCP:
         if dhcp_packet[0:2] == b'\x02\x01':
             if dhcp_packet[240:243] == b'5\x01\x02':
                 print("---------------------")
-                print("Client received a DHCP OFFER packet")
+                print("DHCP Client received a DHCP OFFER packet")
                 self.set_offer(dhcp_packet)
 
             elif dhcp_packet[240:243] == b'5\x01\x05':
                 print("---------------------")
-                print("Client received a DHCP ACK packet")
+                print("DHCP Client received a DHCP ACK packet")
                 self.set_ack(dhcp_packet)
 
             elif dhcp_packet[240:243] == b'5\x01\x06':
                 print("---------------------")
-                print("Client received a DHCP NAK packet")
+                print("DHCP Client received a DHCP NAK packet")
                 client_socket = socket(AF_INET, SOCK_DGRAM)
                 client_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
                 client_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)

@@ -1,4 +1,5 @@
 import webbrowser
+import re
 
 from src.backend.DHCP_Docs.dhcp_client import ClientDHCP
 from src.backend.DNS_Docs.dns_client import ClientDNS
@@ -14,7 +15,7 @@ class Operator:
         self.requested = False
 
     def set_dns_client(self):
-        self.dns_client.ip_add = self.dhcp_client.ip_address
+        self.dns_client.ip_address = self.dhcp_client.ip_address
         self.dns_client.dns_server_add = self.dhcp_client.dns_server_address
         self.dns_client.subnet_mask = self.dhcp_client.subnet_mask
         self.dns_client.router = self.dhcp_client.router
@@ -55,10 +56,27 @@ class Operator:
     def dhcp_decline(self):
         self.dhcp_client.decline()
 
+    def is_a_query(self, hostname):
+        """
+        Checks whether the given hostname is in the format of an 'A' query.
+        """
+        pattern = "^((?!-)[A-Za-z0-9-]" + "{1,63}(?<!-)\\.)" + "+[A-Za-z]{2,6}"
+        compiled_pattern = re.compile(pattern)
+
+        # If the string is empty return false
+        if str is None:
+            return False
+
+        # Return if the string matched the pattern
+        return re.search(compiled_pattern, hostname)
+
     def dns_query(self, hostname):
         self.set_dns_client()
-        self.dns_client.send_dns_query(hostname, 'A')
-        return self.dns_client.ip_result
+        if self.is_a_query(hostname):
+            self.dns_client.send_dns_query(hostname, 'A')
+            return self.dns_client.ip_result
+        else:
+            return "Wrong address format"
 
     def get_image(self):
         # http_tcp_client.start_client()

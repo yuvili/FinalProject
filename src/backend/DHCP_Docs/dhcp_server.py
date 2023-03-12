@@ -240,17 +240,17 @@ def handle_dhcp_packet(dhcp_packet):
     if dhcp_packet[0:2] == b'\x01\x01':
         if dhcp_packet[240:243] == b'5\x01\x01':
             print("---------------------")
-            print("Server received a DHCP DISCOVER packet")
+            print("DHCP Server received a DHCP DISCOVER packet")
             offer(dhcp_packet)
 
         if dhcp_packet[240:243] == b'5\x01\x03':
             print("---------------------")
-            print("Server received a DHCP REQUEST packet")
+            print("DHCP Server received a DHCP REQUEST packet")
             ack(dhcp_packet)
 
         if dhcp_packet[240:243] == b'5\x01\x07':
             print("---------------------")
-            print("Server received a DHCP RELEASE packet")
+            print("DHCP Server received a DHCP RELEASE packet")
             release(dhcp_packet)
 
 def stop_server():
