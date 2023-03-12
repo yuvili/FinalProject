@@ -137,7 +137,7 @@ Host: 127:0:0:1
 Accept: image/webp,*/*
 Connection: keep-alive
 ```
-If the server responds with a status of HTTP/1.1 200 OK (JPEG JFIF image), 
+If the server responds with a status of HTTP/1.1 200 OK (PNG image), 
 the client extracts the image content from the response and saves it to a new file named 
 OurImage.png.
 If the server responds with a status of HTTP/1.1 301 Moved Permanently, 
