@@ -130,11 +130,15 @@ establishes a new connection with the new server to download the image file.
 
 ## Sequence Diagram
 ### DHCP
-(![DHCP_Sequence_Diagram-DHCP_Sequence_Diagram.png](..%2F..%2FDesktop%2F%D7%A9%D7%A0%D7%94%20%D7%91%D7%B3%20%D7%A1%D7%9E%D7%A1%D7%98%D7%A8%20%D7%90%D7%B3%2F%D7%A8%D7%A9%D7%AA%D7%95%D7%AA%20%D7%AA%D7%A7%D7%A9%D7%95%D7%A8%D7%AA%2FFinal%20Project%2FDHCP_Sequence_Diagram-DHCP_Sequence_Diagram.png)
+![DHCP_Sequence_Diagram-DHCP_Sequence_Diagram](https://user-images.githubusercontent.com/77205478/224569367-71d2b0af-5e34-47cc-881b-32d79516684a.png)
+
 
 ### DNS
-![DNS_Sequence_Diagram-DNS_Sequence_Diagram.png](..%2F..%2FDesktop%2F%D7%A9%D7%A0%D7%94%20%D7%91%D7%B3%20%D7%A1%D7%9E%D7%A1%D7%98%D7%A8%20%D7%90%D7%B3%2F%D7%A8%D7%A9%D7%AA%D7%95%D7%AA%20%D7%AA%D7%A7%D7%A9%D7%95%D7%A8%D7%AA%2FFinal%20Project%2FDNS_Sequence_Diagram-DNS_Sequence_Diagram.png)
+![DNS_Sequence_Diagram-DNS_Sequence_Diagram](https://user-images.githubusercontent.com/77205478/224569398-5a9b8800-17ab-4d00-a6c0-801a4e1ae0ec.png)
+
 ### HTTP
-![HTTP_Sequence_Diagram-HTTP_Sequence_Diagram.png](..%2F..%2FDesktop%2F%D7%A9%D7%A0%D7%94%20%D7%91%D7%B3%20%D7%A1%D7%9E%D7%A1%D7%98%D7%A8%20%D7%90%D7%B3%2F%D7%A8%D7%A9%D7%AA%D7%95%D7%AA%20%D7%AA%D7%A7%D7%A9%D7%95%D7%A8%D7%AA%2FFinal%20Project%2FHTTP_Sequence_Diagram-HTTP_Sequence_Diagram.png)
+![HTTP_Sequence_Diagram-HTTP_Sequence_Diagram](https://user-images.githubusercontent.com/77205478/224569437-4fee7e68-9275-4132-ac7d-b37c6b545bcc.png)
+
 ## Hierarchy
-![UML_Diagram.png](..%2F..%2FDesktop%2F%D7%A9%D7%A0%D7%94%20%D7%91%D7%B3%20%D7%A1%D7%9E%D7%A1%D7%98%D7%A8%20%D7%90%D7%B3%2F%D7%A8%D7%A9%D7%AA%D7%95%D7%AA%20%D7%AA%D7%A7%D7%A9%D7%95%D7%A8%D7%AA%2FFinal%20Project%2FUML_Diagram.png)
+![UML_Diagram](https://user-images.githubusercontent.com/77205478/224569531-54c19045-7472-4cc7-8e9f-eda2e401b54f.png)
+
