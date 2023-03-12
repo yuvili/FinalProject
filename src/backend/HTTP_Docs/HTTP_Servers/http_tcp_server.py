@@ -17,10 +17,7 @@ def redirect(client_socket: socket, client_address: tuple[str, int]):
           f' for downloading OurImage.png file')
     # Create packet with the image server address
     response = b"HTTP/1.1 301 Moved Permanently\r\n" \
-               b"Content-Type: None\r\n" \
-               b"Connection: keep-alive\r\n\r\n" \
-               b"127.0.0.1:30966"
-
+               b"Location: http://127.0.0.1:20630"
     client_socket.sendall(response)  # Send the data over the socket
     client_socket.close()
 
@@ -44,7 +41,7 @@ def client_handler(client_socket: socket, client_address: tuple[str, int]):
             # time.sleep(5)
             if response_status == b"GET / HTTP/1.1":
                 print(f'GET / HTTP/1.1 request from {client_address[0]}:{client_address[1]}')
-                response = b"HTTP/1.1 200 OK (text/html)\r\n" \
+                response = b"POST / HTTP/1.1 200 OK\r\n" \
                            b"Content-Type: text/html\r\n" \
                            b"Connection: keep-alive\r\n\r\n" \
                            b"<html><title>Final Project</title><body><h1>Final project in the communication networks " \
@@ -59,7 +56,7 @@ def client_handler(client_socket: socket, client_address: tuple[str, int]):
                 redirect(client_socket, client_address)  # Redirect the client to the image server
 
             else:
-                response = b"HTTP/1.1 400 Bad Request\r\n" \
+                response = b"POST / HTTP/1.1 400 Bad Request\r\n" \
                            b"Content-Type: text/html\r\n" \
                            b"Connection: keep-alive\r\n\r\n"
 

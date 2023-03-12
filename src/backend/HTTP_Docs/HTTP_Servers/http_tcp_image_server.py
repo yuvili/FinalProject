@@ -23,9 +23,6 @@ def client_handler(client_socket: socket, client_address: tuple[str, int]):
 
         try:
             data = client_socket.recv(BUFFER_SIZE)  # Receive data from the client
-            # if not data:  # If there is no more data to receive, break out of the loop
-            #     print(f"Listening on {SERVER_IP}:{SERVER_PORT}")
-            #     break
 
             response_status = data.split(b"\r\n")[0]
             print(response_status)
@@ -33,7 +30,7 @@ def client_handler(client_socket: socket, client_address: tuple[str, int]):
             if response_status == b"GET /imgs/OurImage.png HTTP/1.1":  # If its a PNG file request
                 print(f'GET /OurImage.png HTTP/1.1 request from {client_address[0]}:{client_address[1]}')
 
-                response = b"HTTP/1.1 200 OK (JPEG JFIF image)\r\n" \
+                response = b"POST / HTTP/1.1 200 OK\r\n" \
                            b"Content-Type: text/html\r\n" \
                            b"Connection: keep-alive\r\n\r\n"
 
@@ -58,7 +55,7 @@ def client_handler(client_socket: socket, client_address: tuple[str, int]):
                 client_socket.close()
 
             else:
-                response = b"HTTP/1.1 400 Bad Request\r\n" \
+                response = b"POST / HTTP/1.1 400 Bad Request\r\n" \
                            b"Content-Type: text/html\r\n" \
                            b"Connection: keep-alive\r\n\r\n"
 

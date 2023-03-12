@@ -36,7 +36,7 @@ def send_html_file_request(client_socket: socket, server_address: tuple[str, int
             data = client_socket.recv(BUFFER_SIZE)  # Receive data from socket
 
             response_status = data.split(b"\r\n")[0]
-            if response_status == b"HTTP/1.1 200 OK (text/html)":
+            if response_status == b"POST / HTTP/1.1 200 OK":
                 html_file = data.split(b"\r\n\r\n")[1]
                 filename1 = "new_html.html"
                 with open(filename1, 'wb') as f:  # Create new html file
@@ -86,7 +86,7 @@ def send_image_request(client_socket: socket, server_address: tuple[str, int]):
         received_image = b''
         data = client_socket.recv(BUFFER_SIZE)  # Receive data from socket
         response_status = data.split(b"\r\n")[0]
-        if response_status == b"HTTP/1.1 200 OK (JPEG JFIF image)":
+        if response_status == b"POST / HTTP/1.1 200 OK":
             while True:  # As long as data keeps coming from the socket
                 data = client_socket.recv(BUFFER_SIZE)  # Receive data from socket
                 if not data:
@@ -106,14 +106,12 @@ def send_image_request(client_socket: socket, server_address: tuple[str, int]):
                     f.close()  # Close html file
 
         elif response_status == b"HTTP/1.1 301 Moved Permanently":
-            address = data.split(b"\r\n\r\n")[1]
-            new_ip = (address.split(b":")[0]).decode()
-            new_port = int((address.split(b":")[1]).decode())
-            print(new_port)
+            address = data.split(b"\r\n")[1]
+            new_ip = (address.split(b"://")[1]).decode()
+            new_port = int((address.split(b":")[3]).decode())
             print("--------------------------------")
             print(f'Redirect to {new_ip}:{new_port}')
             print("--------------------------------")
-            # time.sleep(10)
             http_request((new_ip, new_port))
 
         else:
