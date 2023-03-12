@@ -1,0 +1,19 @@
+@startuml
+title HTTP Sequence Diagram
+
+actor User
+participant Client
+participant Server
+participant ImageServer
+
+User -> Client : open Client
+
+Client -> Server: HTTP REQUEST Of HTML file
+Server -> Client : HTTP RESPONSE Of HTML file
+Client -> Server : HTTP REQUEST Of Image file
+Server -> Client : HTTP ImageServer Address
+Client -> ImageServer : HTTP REQUEST Of Image file
+ImageServer -> Client : HTTP RESPONSE Of Image file
+
+User -> Client : close Client
+@enduml

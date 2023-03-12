@@ -13,17 +13,12 @@ class Operator:
     def __init__(self):
         self.dhcp_client = ClientDHCP()
         self.dns_client = ClientDNS()
-        self.window = None
-        self.requested = False
 
     def set_dns_client(self):
         self.dns_client.ip_address = self.dhcp_client.ip_address
         self.dns_client.dns_server_add = self.dhcp_client.dns_server_address
         self.dns_client.subnet_mask = self.dhcp_client.subnet_mask
         self.dns_client.router = self.dhcp_client.router
-
-    def set_window(self, window: Tk):
-        self.window = window
 
     def dhcp_generate_ip(self):
         self.dhcp_client.discover()
@@ -83,7 +78,3 @@ class Operator:
     def get_image(self):
         http_tcp_client.start_client()
         print("done html")
-        # webbrowser.open_new('new_html.html')
-
-
-

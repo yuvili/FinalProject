@@ -33,7 +33,7 @@ def client_handler(client_socket: socket, client_address: tuple[str, int]):
     while True:  # Server loop
         if client_socket.fileno() == -1:  # Check if socket are closed if so returns -1
             print("\n")
-            print(f"Listening on {SERVER_IP}:{SERVER_PORT} ")
+            print(f"HTTP Server listening on {SERVER_IP}:{SERVER_PORT} ")
             break
 
         try:
@@ -87,13 +87,13 @@ def start_server():
         server_socket.listen()
 
         threads = []
-        print(f"Listening on {SERVER_IP}:{SERVER_PORT}")
+        print(f"HTTP Server listening on {SERVER_IP}:{SERVER_PORT} ")
 
         while True:
             try:
                 # Establish connection with client
                 client_socket, address = server_socket.accept()  # Accept a connection
-                print(f'Connection established with client {address[0]}:{address[1]}')
+                print(f'HTTP Server connection established with client {address[0]}:{address[1]}')
 
                 # Create a new thread to handle the client request
                 thread = threading.Thread(target=client_handler, args=(client_socket, address))

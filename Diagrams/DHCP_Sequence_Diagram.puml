@@ -7,11 +7,14 @@ participant Server
 
 User -> Client : open Client
 
-note over Client, Server:DHCP Communication
+note over Client, Server:DHCP IP Claim
 Client -> Server: DHCP DISCOVER
 Server -> Client : DHCP OFFER
 Client -> Server : DHCP REQUEST
 Server -> Client : DHCP ACK\NAK
+
+note over Client, Server:DHCP IP Release
+Client -> Server: DHCP Release
 
 User -> Client : close Client
 @enduml

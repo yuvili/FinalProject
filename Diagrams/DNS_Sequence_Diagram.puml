@@ -1,0 +1,15 @@
+@startuml
+title DNS Sequence Diagram
+
+actor User
+participant Client
+participant Server
+
+User -> Client : open Client
+
+note over Client, Server:DNS Communication
+Client -> Server: DNS Query
+Server -> Client : DNS Response
+
+User -> Client : close Client
+@enduml

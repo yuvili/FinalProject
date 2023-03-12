@@ -83,7 +83,7 @@ class ClientDHCP:
         # Build the full packet
         packet = discover_header + dhcp_options
 
-        # Send the packet to the broadcast address on UDP port 68 (DHCP client port)
+        # Send the packet to the broadcast address on UDP port 67 (DHCP server port)
         server_address = ("255.255.255.255", 67)
         client_socket.sendto(packet, server_address)
 
@@ -149,7 +149,7 @@ class ClientDHCP:
         # Build the full packet
         packet = request_header + dhcp_options
 
-        # Send the packet to the broadcast address on UDP port 68 (DHCP client port)
+        # Send the packet to the broadcast address on UDP port 67 (DHCP server port)
         client_socket.sendto(packet, ("255.255.255.255", 67))
         # Receive DHCP OFFER packet from server
         ack_packet = client_socket.recv(2048)
@@ -197,7 +197,7 @@ class ClientDHCP:
         # Build the full packet
         packet = decline_header + dhcp_options
 
-        # Send the packet to the broadcast address on UDP port 68 (DHCP client port)
+        # Send the packet to the broadcast address on UDP port 67 (DHCP server port)
         client_socket.sendto(packet, ("255.255.255.255", 67))
         client_socket.close()
 

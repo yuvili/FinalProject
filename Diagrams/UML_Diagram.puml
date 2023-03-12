@@ -1,4 +1,5 @@
 @startuml
+!pragma layout smetana
 class dhcp_server
 class dhcp_client
 class dns_server
@@ -6,96 +7,146 @@ class dns_client
 class MainGui
 class Operations
 
-
 class dhcp_server{
-- SERVER_IP
-- DNS_SERVER_IP
-- ROUTER_IP
-- SERVER_PORT
-- CLIENT_PORT
-- SCOPE
-- LEASE
-- BROADCAST_IP
-- SUBNET_MASK
-- available_addresses
-- log_file
-
-+ generate_ip_addresses()
-+ offer()
-+ ack()
-+ nak()
-+ release()
-+ handle_dhcp_packet()
-+ stop_server()
-+ start_server()
+-SERVER_IP
+-DNS_SERVER_IP
+-ROUTER_IP
+-SERVER_PORT
+-CLIENT_PORT
+-SCOPE
+-LEASE
+-BROADCAST_IP
+-SUBNET_MASK
+-available_addresses
+-log_file
++generate_ip_addresses()
++offer()
++ack()
++nak()
++release()
++handle_dhcp_packet()
++stop_server()
++start_server()
 }
 
 class dhcp_client{
-- mac_address
-- ip_address
-- dns_server_address
-- lease_obtain
-- lease
-- lease_expires
-- subnet_mask
-- router
-- dhcp_server_ip
-- offered_addr
-- transaction_id
-- got_offer
-- got_nak
-- ack_set
-
-+ discover()
-+ set_offer()
-+ request()
-+ decline()
-+ calculate_lease_expire()
-+ set_ack()
-+ release()
-+ handle_packet()
-
+-mac_address
+-ip_address
+-dns_server_address
+-lease_obtain
+-lease
+-lease_expires
+-subnet_mask
+-router
+-dhcp_server_ip
+-offered_addr
+-transaction_id
+-got_offer
+-got_nak
+-ack_set
++discover()
++set_offer()
++request()
++decline()
++calculate_lease_expire()
++set_ack()
++release()
++handle_packet()
 }
 
 class dns_server{
-- DNS_IP
-- DNS_Cache
-+ handle_dns_query
-+ start_server
+-DNS_IP
+-DNS_Cache
++handle_dns_query()
++start_server()
 }
 
 class dns_client{
-- client_port
-- server_port
-- ip_add
-- dns_server_add
-- subnet_mask
-- router
-- ip_result
-+ parse_dns_response
-+ send_dns_query
+-client_port
+-server_port
+-ip_address
+-dns_server_add
+-subnet_mask
+-router
+-ip_result
++parse_dns_response()
++send_dns_query()
 }
 
+class http_tcp_client{
+-SERVER_IP
+-SERVER_PORT
+-BUFFER_SIZE
++create_html_file_request()
++send_html_file_request()
++create_image_request()
++send_image_request()
++http_request()
++start_client()
+}
+class http_tcp_server{
+-SERVER_IP
+-SERVER_PORT
+-IMAGE_SERVER_IP
+-IMAGE_SERVER_PORT
+-BUFFER_SIZE
++redirect()
++client_handler()
++start_server()
+}
+class http_tcp_image_server{
+-IMAGE_SERVER_IP
+-IMAGE_SERVER_PORT
+-BUFFER_SIZE
+-packets
+-our_image
++client_handler()
++start_server()
+}
+class Operations{
+-dhcp_client
+-dns_client
++set_dns_client()
++dhcp_generate_ip()
++dhcp_request()
++dhcp_decline()
++is_a_query()
++dns_query()
++get_image()
+}
 class MainGui{
-+ update_dns_button()
-+ dhcp_client_request()
-+ dhcp_client_decline()
-+ dhcp_error_screen()
-+ dhcp_generateIP_frame()
-+ dhcp_client_release()
-+ dhcp_screen()
-+ dhcp_op()
-+ get_ip()
-+ dns_control_screen()
-+ dns_screen()
-+ client_info_details()
-+ client_info_screen()
-+ main_frame()
-+ middle_frame()
-+ opp_frame()
-+ clear_screen()
++update_dns_button()
++dhcp_client_request()
++dhcp_client_decline()
++dhcp_error_screen()
++dhcp_generateIP_frame()
++dhcp_client_release()
++dhcp_screen()
++dhcp_op()
++get_ip()
++dns_control_screen()
++dns_screen()
++client_info_details()
++client_info_screen()
++main_frame()
++middle_frame()
++opp_frame()
++clear_screen()
 }
 
-dhcp_client <-- dhcp_server
-dns_client <--dns_server
+Operations <--> MainGui
+MainGui --> dhcp_server
+MainGui --> http_tcp_server
+MainGui --> http_tcp_image_server
+Operations --> dhcp_client
+Operations --> dns_client
+Operations <--> http_tcp_client
+Operations <-- dhcp_client
+Operations <-- dns_client
+dns_client <-- dns_server
+dns_server <-- dns_client
+dhcp_server --> dhcp_client
+dhcp_client --> dhcp_server
+http_tcp_client --> http_tcp_server: Connect
+http_tcp_client --> http_tcp_image_server: Connect
 @enduml

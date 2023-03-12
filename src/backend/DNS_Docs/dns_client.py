@@ -1,4 +1,5 @@
 import socket
+import random
 from socket import *
 import struct
 
@@ -50,7 +51,7 @@ class ClientDNS():
         server_address = (self.dns_server_add, self.server_port)
         client_socket = socket(AF_INET, SOCK_DGRAM)
         # Construct the DNS query
-        id = 1
+        id = random.randint(1, 2 ** 16 - 1)
         flags = 0x0100  # Standard query with recursion desired
         qdcount = 1
         ancount = 0

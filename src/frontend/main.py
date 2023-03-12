@@ -46,7 +46,6 @@ class MainGui:
         self.op_frame = CTkFrame(self.window, width=500)
 
         self.main_frame()
-        self.operator.set_window(self.window)
         self.window.mainloop()
 
     def update_dns_button(self):
@@ -220,7 +219,7 @@ class MainGui:
 
         self.dns_control_screen()
 
-    def html_actions(self):
+    def http_actions(self):
         self.clear_screen(self.op_frame)
 
         dhcp_actions = CTkLabel(self.op_frame, text="DHCP Actions", font=CTkFont(size=15, weight="bold"))
@@ -229,22 +228,22 @@ class MainGui:
         generate_button = CTkButton(self.op_frame, text="Get Image", command=self.operator.get_image)
         generate_button.grid(row=1, column=0, padx=(60, 60), pady=10)
 
-    def html_screen(self):
+    def http_screen(self):
         self.clear_screen(self.mid_frame)
 
-        dhcp_textbox = CTkTextbox(self.mid_frame, width=250, height=380)
+        dhcp_textbox = CTkTextbox(self.mid_frame, width=250, height=380, wrap="word")
         dhcp_textbox.grid(row=0, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
 
-        dhcp_info_text = 'DHCP\n\nIn this page you will have an option to \ngenerate yourself an IP ' \
-                         'address, in \ncase you don`t have on, or release \nyour current IP address. ' \
-                         '\nBy default, when starting the program your IP address is "0.0.0.0", so please start' \
-                         ' with generating an address.\n\n' \
-                         'The "Generate IP Address" option is \navailable only in case when your IP \nis "0.0.0.0".' \
-                         '\nIn case when you have a different IP \naddress and you wish to replace it, \nplease release your IP with "Release \nIP"' \
-                         ' action first.'
+        dhcp_info_text = 'HTTP' \
+                         '\n\nIn this page, by pressing the "Get Image" button, HTTP request to the HTTP server.' \
+                         '\nThe server receives the request and sends as a respond the HTML file.' \
+                         '\nNext, the client sends another HTTP request to receive the image.' \
+                         '\nThe server doesn`t have the image, so it redirects the request to the image server,' \
+                         'which directly sends the answer to the client.' \
+                         '\n\nFinally, the html will be opened as a new tab at your default browser.'
         dhcp_textbox.insert("0.0", dhcp_info_text)
 
-        self.html_actions()
+        self.http_actions()
 
     def client_info_details(self):
         self.clear_screen(self.op_frame)
@@ -340,7 +339,7 @@ class MainGui:
         if self.operator.dhcp_client.ip_address == "0.0.0.0":
             dns_button.configure(state="disabled")
 
-        http_button = CTkButton(self.main_menu_frame, text="HTTP Application", command=self.html_screen)
+        http_button = CTkButton(self.main_menu_frame, text="HTTP Application", command=self.http_screen)
         http_button.grid(row=3, column=0, padx=20, pady=10)
 
         CTkLabel(self.main_menu_frame, text='').grid(row=4, column=0, padx=20, pady=10)

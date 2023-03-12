@@ -79,9 +79,10 @@ By default, the server will use a hard-coded IP address (127.0.0.1).
 
 ### HTTP Server
 This is a simple web server implemented in Python using socket programming. 
-It handle with HTTP GET requests from client and respond with either an HTML file or an image file.
-The server contain the html file and send it to the client while receiving a HTML response, but this server dont have the png image file that needed for html file so while receiving png image file request the server riderect the client to anathor server (the image server) for downloading the image.
-
+It handles with HTTP GET requests from client and respond with either an HTML file or an 
+image file. The server contain the html file and send it to the client while receiving an HTML 
+response, but this server don't have the png image file that needed for html file so while receiving png 
+image file request the server redirect the client to another server (the image server) for downloading the image.
 #### Dependencies
 - Python 3.x
 - socket library
@@ -137,7 +138,7 @@ Host: 127:0:0:1
 Accept: image/webp,*/*
 Connection: keep-alive
 ```
-If the server responds with a status of HTTP/1.1 200 OK (PNG image), 
+If the server responds with a status of HTTP/1.1 200 OK (JPEG JFIF image), 
 the client extracts the image content from the response and saves it to a new file named 
 OurImage.png.
 If the server responds with a status of HTTP/1.1 301 Moved Permanently, 

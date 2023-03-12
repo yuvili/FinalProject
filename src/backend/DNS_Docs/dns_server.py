@@ -44,7 +44,7 @@ def handle_dns_query(data, client_address, server_socket):
             hostname_ttl = DNS_Cache[hostname]["ttl"]
         else:
             ip_address = gethostbyname(hostname)
-            hostname_ttl = 10
+            hostname_ttl = 86400
             DNS_Cache[hostname] = {"ip": ip_address, "ttl": hostname_ttl}
 
         hostname_labels = hostname.split('.')

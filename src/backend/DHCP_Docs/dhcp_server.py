@@ -87,7 +87,7 @@ def offer(packet):
     # Build the full packet
     packet = offer_header + dhcp_options
 
-    # Send the packet to the broadcast address on UDP port 67 (DHCP server port)
+    # Send the packet to the broadcast address on UDP port 68 (DHCP client port)
     broadcast_address = ("255.255.255.255", 68)
     server_socket.sendto(packet, broadcast_address)
     server_socket.close()
@@ -156,7 +156,7 @@ def ack(request_packet):
     # Build the full packet
     packet = ack_header + dhcp_options
 
-    # Send the packet to the broadcast address on UDP port 67 (DHCP server port)
+    # Send the packet to the broadcast address on UDP port 68 (DHCP client port)
     broadcast_address = ("255.255.255.255", 68)
     server_socket.sendto(packet, broadcast_address)
     server_socket.close()
@@ -213,7 +213,7 @@ def nak(request_packet):
     # Build the full packet
     packet = nak_header + dhcp_options
 
-    # Send the packet to the broadcast address on UDP port 67 (DHCP server port)
+    # Send the packet to the broadcast address on UDP port 68 (DHCP client port)
     broadcast_address = ("255.255.255.255", 68)
     server_socket.sendto(packet, broadcast_address)
     server_socket.close()
@@ -243,12 +243,16 @@ def handle_dhcp_packet(dhcp_packet):
             print("DHCP Server received a DHCP DISCOVER packet")
             offer(dhcp_packet)
 
-        if dhcp_packet[240:243] == b'5\x01\x03':
+        elif dhcp_packet[240:243] == b'5\x01\x03':
             print("---------------------")
             print("DHCP Server received a DHCP REQUEST packet")
             ack(dhcp_packet)
 
-        if dhcp_packet[240:243] == b'5\x01\x07':
+        elif dhcp_packet[240:243] == b'5\x01\x04':
+            print("---------------------")
+            print("DHCP Server received a DHCP DECLINE packet")
+
+        elif dhcp_packet[240:243] == b'5\x01\x07':
             print("---------------------")
             print("DHCP Server received a DHCP RELEASE packet")
             release(dhcp_packet)

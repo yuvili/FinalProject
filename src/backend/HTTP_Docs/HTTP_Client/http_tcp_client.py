@@ -30,7 +30,7 @@ def send_html_file_request(client_socket: socket, server_address: tuple[str, int
     if server_address[1] == SERVER_PORT:  # Check which server the client is currently connected to
         new_packet = create_html_file_request()  # Create a http file request packet
         client_socket.sendall(new_packet)  # Send the request to the server
-        print(f'Send HTML file request to {server_address[0]}:{server_address[1]}')
+        print(f'HTTP Client send HTML file request to {server_address[0]}:{server_address[1]}')
 
         try:
             data = client_socket.recv(BUFFER_SIZE)  # Receive data from socket
@@ -81,7 +81,7 @@ def send_image_request(client_socket: socket, server_address: tuple[str, int]):
     """
     packet = create_image_request()  # Creates a png image file request packet
     client_socket.sendall(packet)  # Send the request to the server
-    print(f'Send JPEG image file request to {server_address[0]}:{server_address[1]}')
+    print(f'HTTP Client send JPEG image file request to {server_address[0]}:{server_address[1]}')
     try:
         received_image = b''
         data = client_socket.recv(BUFFER_SIZE)  # Receive data from socket
@@ -132,7 +132,7 @@ def http_request(server_address: tuple[str, int]):
     """
     with socket(AF_INET, SOCK_STREAM) as client_socket:  # Create socket
         client_socket.connect(server_address)  # Connect to server address and port
-        print(f'Connection established with {server_address[0]}:{server_address[1]}')
+        print(f'HTTP Client connection established with {server_address[0]}:{server_address[1]}')
 
         try:
             send_html_file_request(client_socket, server_address)  # Creates a http file request
