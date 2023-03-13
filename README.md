@@ -147,6 +147,8 @@ establishes a new connection with the new server to download the image file.
 
 ### HTTP Screen
 <img width="797" alt="http_main" src="https://user-images.githubusercontent.com/77205478/224571078-c3d1966c-3832-48ca-ba75-c1afd6eb0534.png">
+ When clicking "Get Image", a new browser tab will open with the desired image:
+<img width="1440" alt="Screenshot 2023-03-13 at 19 59 11" src="https://user-images.githubusercontent.com/77205478/224788793-4ad8c7cd-0966-42be-92fb-1d8d8db944fa.png">
 
 ### Client Info Screen
 <img width="803" alt="client info" src="https://user-images.githubusercontent.com/77205478/224571094-ecab6ac2-f5af-43af-a9a4-44d1ef3f1801.png">
