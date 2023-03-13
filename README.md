@@ -2,6 +2,7 @@
 >Made by: [Yuval Shabat](https://github.com/yuvili) & [Alina Zahozi](https://github.com/AlinaZahozi)
 
 ## How To use
+Make sure you check our run of the project it this <a href="https://youtu.be/pYBoYVd-Fi4" target="_blank">link</a>.
 1. Navigate to ``DNS_Docs`` folder using your cd command (pycharm terminal). 
 ```sh
 cd src/backend/DNS_Docs
