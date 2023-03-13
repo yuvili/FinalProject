@@ -167,3 +167,14 @@ establishes a new connection with the new server to download the image file.
 ## Hierarchy
 ![UML_Diagram](https://user-images.githubusercontent.com/77205478/224569531-54c19045-7472-4cc7-8e9f-eda2e401b54f.png)
 
+## Links
+- Basic idea of DHCP messages format - https://iponwire.com/dhcp-message-type/#DHCP_INFORM
+- DHCP Lease operation - https://youtu.be/5QhnovYb6yM
+- Interpret bytes as packed binary data - https://docs.python.org/3/library/struct.html
+- DNS study - https://mislove.org/teaching/cs4700/spring11/handouts/project1-primer.pdf
+- GUI documentation - https://github.com/TomSchimansky/CustomTkinter
+- TCP CC - https://www.geeksforgeeks.org/tcp-congestion-control/
+- TCP, HTTP, DNS - https://courses.campus.gov.il/courses/course-v1:ARIEL+ACD_RFP4_ARIEL_comm+2022_1/course/
+- HTTP - https://www.youtube.com/watch?v=iYM2zFP3Zn0
+- TCP - https://www.youtube.com/watch?v=HCHFX5O1IaQ
+

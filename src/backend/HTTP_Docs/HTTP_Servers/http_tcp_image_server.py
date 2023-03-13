@@ -30,9 +30,10 @@ def client_handler(client_socket: socket, client_address: tuple[str, int]):
             if response_status == b"GET /imgs/OurImage.png HTTP/1.1":  # If its a PNG file request
                 print(f'GET /OurImage.png HTTP/1.1 request from {client_address[0]}:{client_address[1]}')
 
-                response = b"POST / HTTP/1.1 200 OK\r\n" \
-                           b"Content-Type: text/html\r\n" \
-                           b"Connection: keep-alive\r\n\r\n"
+                response = b"HTTP/1.1 200 OK\r\n" \
+                           b"Connection: keep-alive\r\n\r\n" \
+                           b"Content-Type: image/png\r\n\r\n"
+
 
                 client_socket.sendall(response)  # Send response to the client
 
@@ -42,7 +43,6 @@ def client_handler(client_socket: socket, client_address: tuple[str, int]):
                             data = f.read(BUFFER_SIZE)  # Read 1024 bytes (BUFFER_SIZE) from the file
                             if not data:  # If there is no more data to read, break out of the loop
                                 break
-
                             client_socket.sendall(data)  # Send the data over the socket
 
                 except FileNotFoundError:

@@ -222,7 +222,7 @@ class MainGui:
     def http_actions(self):
         self.clear_screen(self.op_frame)
 
-        dhcp_actions = CTkLabel(self.op_frame, text="DHCP Actions", font=CTkFont(size=15, weight="bold"))
+        dhcp_actions = CTkLabel(self.op_frame, text="HTTP Request an image", font=CTkFont(size=15, weight="bold"))
         dhcp_actions.grid(row=0, column=0, padx=20, pady=(60, 10))
 
         generate_button = CTkButton(self.op_frame, text="Get Image", command=self.operator.get_image)

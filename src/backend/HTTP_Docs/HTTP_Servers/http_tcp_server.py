@@ -17,7 +17,10 @@ def redirect(client_socket: socket, client_address: tuple[str, int]):
           f' for downloading OurImage.png file')
     # Create packet with the image server address
     response = b"HTTP/1.1 301 Moved Permanently\r\n" \
-               b"Location: http://127.0.0.1:20630"
+               b"Connection: keep-alive\r\n\r\n" \
+               b"Content-Type: text/html\r\n\r\n" \
+               b"Location: http://127.0.0.1:20630\r\n"
+
     client_socket.sendall(response)  # Send the data over the socket
     client_socket.close()
 
@@ -42,8 +45,8 @@ def client_handler(client_socket: socket, client_address: tuple[str, int]):
             if response_status == b"GET / HTTP/1.1":
                 print(f'GET / HTTP/1.1 request from {client_address[0]}:{client_address[1]}')
                 response = b"POST / HTTP/1.1 200 OK\r\n" \
-                           b"Content-Type: text/html\r\n" \
                            b"Connection: keep-alive\r\n\r\n" \
+                           b"Content-Type: text/html\r\n\r\n" \
                            b"<html><title>Final Project</title><body><h1>Final project in the communication networks " \
                            b"course:</h1><p><img src='OurImage.png'></p><h3>Presenters:    <br />Alina zakhozha ID: " \
                            b"323431965    <br />Yuval Shabat   ID: 318516630</h3></body></html> "
@@ -65,7 +68,6 @@ def client_handler(client_socket: socket, client_address: tuple[str, int]):
 
         except Exception as e:
             print(f"Unexpected server error: {e}")
-
 
 def start_server():
     # AF_INET is the address family for IPv4
